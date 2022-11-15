@@ -128,28 +128,12 @@ router.get('/signup', function(req, res, next) {
  * successfully created, the user is logged in.
  */
 router.post('/signup', function(req, res, next) {
-  var salt = crypto.randomBytes(16);
-  console.log(req.body);
-  console.log(req.body.password);
-  console.log(req.body.email);
-  crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', function(err, hashedPassword) {
-    
+
+  db.createUser(req.body.username, req.body.password,req.body.email, function(err, user) {
     if (err) { return next(err); }
-    db.run('INSERT INTO users (username, hashed_password,email, salt) VALUES (?, ?,?, ?)', [
-      req.body.username,
-      hashedPassword,
-      req.body.email,
-      salt
-    ], function(err) {
+    req.login(user, function(err) {
       if (err) { return next(err); }
-      var user = {
-        id: this.lastID,
-        username: req.body.username
-      };
-      req.login(user, function(err) {
-        if (err) { return next(err); }
-        res.redirect('/');
-      });
+      res.redirect('/');
     });
   });
 });

@@ -21,17 +21,13 @@ var transporter = nodemailer.createTransport({
   }
 });
 
-var mailOptions = {
-  from: 'youremail@gmail.com',
-  to: 'myfriend@yahoo.com',
-  subject: 'Sending Email using Node.js',
-  text: 'That was easy!'
-};
-
-
-
 router.post('/sendinvite', function (req, res, next) {
-  var email = req.body.email;
+  res.locals.currentUser = req.user;
+  
+  var email = db.run('Select email from users where username = ?', req.user.username, function (err, row) {
+    if (err) {console.log(err);}
+      else {console.log(row);}
+      });
   var toemail = req.body.toemail;
   var subject = 'Invitation to join my app';
   var text = 'You have been invited to join my app. Please click on the link below to join.' + LINK + token;
@@ -41,7 +37,7 @@ router.post('/sendinvite', function (req, res, next) {
     subject: subject,
     text: text
   };
-  db.createInvitation(email, toemail, token, function (err, result) {
+  db.createInvitation(email, toemail, function (err, result) {
     if (err) {
       console.log(err);
     }
@@ -58,7 +54,8 @@ router.post('/sendinvite', function (req, res, next) {
   });
 });
 
-router.post('/frominvite', function (req, res, next) {
+router.post('/invite', function (req, res, next) {
+  
   var token = req.body.token;
   var salt = crypto.randomBytes(16);
   crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', function (err, hashedPassword) {
@@ -70,9 +67,8 @@ router.post('/frominvite', function (req, res, next) {
       salt
     ], function (err) {
       if (err) { return next(err); }
-      
     });
-    friend=db.run('SELECT username FROM invites WHERE token = ?', [token], function (err) {
+    friend = db.run('SELECT username FROM invites WHERE token = ?', [token], function (err) {
       if (err) { return next(err); }
     });
     db.run('DELETE FROM invites WHERE token = ?', [token], function (err) {

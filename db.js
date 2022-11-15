@@ -29,7 +29,8 @@ db.serialize(function() {
   
 });
 
-function createUser(username, password, email, callback) {
+
+db.createUser = function(username, password, email, callback) {
   var salt = crypto.randomBytes(16);
   db.run('INSERT INTO users (username, hashed_password, salt, email) VALUES (?, ?, ?, ?)', [
     username,
@@ -44,7 +45,7 @@ function createUser(username, password, email, callback) {
   });
 }
 
-export function createInvitation(email,currentuser, callback) {
+db.createInvitation = function(email,currentuser, callback) {
   var token = crypto.randomBytes(16);
   db.run('INSERT INTO invitations (token, email, invitedby) VALUES (?, ? ,?)', [
     token,
@@ -58,7 +59,7 @@ export function createInvitation(email,currentuser, callback) {
   });
 }
 
-function checkInvitation(token, callback) {
+db.checkInvitation = function(token, callback) {
   db.get('SELECT email FROM invitations WHERE token = ?', token, function(err, row) {
     if (err) {
       return callback(err);
@@ -68,3 +69,4 @@ function checkInvitation(token, callback) {
 }
 
 module.exports = db;
+
