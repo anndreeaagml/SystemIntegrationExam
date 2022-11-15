@@ -129,11 +129,16 @@ router.get('/signup', function(req, res, next) {
  */
 router.post('/signup', function(req, res, next) {
   var salt = crypto.randomBytes(16);
+  console.log(req.body);
+  console.log(req.body.password);
+  console.log(req.body.email);
   crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', function(err, hashedPassword) {
+    
     if (err) { return next(err); }
-    db.run('INSERT INTO users (username, hashed_password, salt) VALUES (?, ?, ?)', [
+    db.run('INSERT INTO users (username, hashed_password,email, salt) VALUES (?, ?,?, ?)', [
       req.body.username,
       hashedPassword,
+      req.body.email,
       salt
     ], function(err) {
       if (err) { return next(err); }
@@ -148,5 +153,6 @@ router.post('/signup', function(req, res, next) {
     });
   });
 });
+
 
 module.exports = router;

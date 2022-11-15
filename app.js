@@ -33,7 +33,7 @@ app.use(session({
   saveUninitialized: false, // don't create session until something stored
   store: new SQLiteStore({ db: 'sessions.db', dir: './var/db' })
 }));
-app.use(csrf());
+//app.use(csrf());
 app.use(passport.authenticate('session'));
 app.use(function(req, res, next) {
   var msgs = req.session.messages || [];
@@ -43,7 +43,7 @@ app.use(function(req, res, next) {
   next();
 });
 app.use(function(req, res, next) {
-  res.locals.csrfToken = req.csrfToken();
+  //res.locals.csrfToken = req.csrfToken();
   next();
 });
 
