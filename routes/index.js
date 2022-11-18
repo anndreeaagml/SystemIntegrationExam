@@ -3,7 +3,8 @@ var ensureLogIn = require('connect-ensure-login').ensureLoggedIn;
 var db = require('../db');
 var nodemailer = require('nodemailer');
 const { token } = require('morgan');
-
+const passport = require('passport');
+uuidv4 = require('uuid').v4;
 var ensureLoggedIn = ensureLogIn();
 
 var router = express.Router();
@@ -22,41 +23,47 @@ var transporter = nodemailer.createTransport({
 });
 
 router.post('/sendinvite', function (req, res, next) {
-  res.locals.currentUser = req.user;
-  
-  var email = db.run('Select email from users where username = ?', req.user.username, function (err, row) {
-    if (err) {console.log(err);}
-      else {console.log(row);}
-      });
-  var toemail = req.body.toemail;
-  var subject = 'Invitation to join my app';
-  var text = 'You have been invited to join my app. Please click on the link below to join.' + LINK + token;
-  var mailOptions = {
-    from: email,
-    to: toemail,
-    subject: subject,
-    text: text
-  };
-  db.createInvitation(email, toemail, function (err, result) {
+  //res.locals.currentUser = req.user;
+  var user = req.user.username;
+  db.getEmail(user, function (err, result) { //get email of user
     if (err) {
       console.log(err);
     }
     else {
-      console.log(result);
-    }
-  });
-  transporter.sendMail(mailOptions, function (error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
+      var email = result.email;
+      var toemail = req.body.toemail;
+      var subject = 'Invitation to join my app';
+      var token = uuidv4();
+      var text = 'You have been invited by ' + email + ' to join my app. Please click on the link below to join.' + LINK + token;
+      var mailOptions = {
+        from: email,
+        to: toemail,
+        subject: subject,
+        text: text
+      };
+      db.createInvitation(toemail, email, token, function (err, result) {
+        if (err) {
+          console.log(err);
+        }
+        else {
+          console.log(result.email);
+        }
+      });
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+
+      });
+      res.redirect('/');
     }
   });
 });
 
 router.post('/invite', function (req, res, next) {
-  
-  var token = req.body.token;
+  var token = req.get('token');
   var salt = crypto.randomBytes(16);
   crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', function (err, hashedPassword) {
     if (err) { return next(err); }

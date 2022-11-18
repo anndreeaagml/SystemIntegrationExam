@@ -1,7 +1,7 @@
 var sqlite3 = require('sqlite3');
 var mkdirp = require('mkdirp');
 var crypto = require('crypto');
-
+uuid4= require('uuid').v4;
 mkdirp.sync('./var/db');
 
 var db = new sqlite3.Database('./var/db/todos.db');
@@ -45,8 +45,7 @@ db.createUser = function(username, password, email, callback) {
   });
 }
 
-db.createInvitation = function(email,currentuser, callback) {
-  var token = crypto.randomBytes(16);
+db.createInvitation = function(email,currentuser, token, callback) {
   db.run('INSERT INTO invitations (token, email, invitedby) VALUES (?, ? ,?)', [
     token,
     email,
@@ -61,6 +60,15 @@ db.createInvitation = function(email,currentuser, callback) {
 
 db.checkInvitation = function(token, callback) {
   db.get('SELECT email FROM invitations WHERE token = ?', token, function(err, row) {
+    if (err) {
+      return callback(err);
+    }
+    callback(null, row);
+  });
+}
+
+db.getEmail = function(username, callback) {
+  db.get('SELECT email FROM users WHERE username = ?', username, function(err, row) {
     if (err) {
       return callback(err);
     }
