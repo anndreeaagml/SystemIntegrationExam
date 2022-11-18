@@ -7,6 +7,19 @@ const passport = require('passport');
 uuidv4 = require('uuid').v4;
 var ensureLoggedIn = ensureLogIn();
 
+var options = {
+  root: __dirname + '/../var/db/',
+  dotfiles: 'deny',
+  headers: {
+    'x-timestamp': Date.now(),
+    'x-sent': true
+  }
+};
+const Database = require('better-sqlite3');
+const db2 = new Database('./var/db/todos.db', { verbose: console.log });
+
+var crypto = require('crypto');
+
 var router = express.Router();
 LINK = "http://localhost:3000/invite?token="
 /* GET home page. */
@@ -62,40 +75,16 @@ router.post('/sendinvite', function (req, res, next) {
   });
 });
 
-router.post('/invite', function (req, res, next) {
-  var token = req.get('token');
+router.post('/invite', async function (req, res, next) {
+  var token = req.query.token;
   var salt = crypto.randomBytes(16);
-  crypto.pbkdf2(req.body.password, salt, 310000, 32, 'sha256', function (err, hashedPassword) {
-    if (err) { return next(err); }
-    db.run('INSERT INTO users (username, hashed_password, email, salt) VALUES (?, ?, ?, ?)', [
-      req.body.username,
-      hashedPassword,
-      req.body.email,
-      salt
-    ], function (err) {
-      if (err) { return next(err); }
-    });
-    friend = db.run('SELECT username FROM invites WHERE token = ?', [token], function (err) {
-      if (err) { return next(err); }
-    });
-    db.run('DELETE FROM invites WHERE token = ?', [token], function (err) {
-      if (err) { return next(err); }
-    });
-    db.run('INSERT INTO friends (username, friend) VALUES (?, ?)', [
-      req.body.username,
-      friend
-    ], function (err) {
-      if (err) { return next(err); }
-      var user = {
-        id: this.lastID,
-        username: req.body.username
-      };
-      req.login(user, function (err) {
-        if (err) { return next(err); }
-        res.redirect('/');
-      });
-    });
-  });
+  db2.prepare('INSERT INTO users (username, hashed_password,email, salt) VALUES (?, ?, ?, ?)').run(req.body.username, crypto.pbkdf2Sync(req.body.password, salt, 1000, 64, 'sha512').toString('hex'),req.body.email , salt.toString('hex'));
+  var friend = await db2.prepare('SELECT invitedby FROM invitations WHERE token = ?').get(token);
+  db2.prepare('DELETE FROM invitations WHERE token = ?').run(token);
+  db2.prepare('INSERT INTO friends (username, friend) VALUES (?, ?)').run(req.body.username, friend.invitedby);
+
+  res.redirect('/login');
+  
 });
 
 

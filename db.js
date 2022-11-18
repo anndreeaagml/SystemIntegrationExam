@@ -4,6 +4,7 @@ var crypto = require('crypto');
 uuid4= require('uuid').v4;
 mkdirp.sync('./var/db');
 
+
 var db = new sqlite3.Database('./var/db/todos.db');
 
 db.serialize(function() {
@@ -74,6 +75,46 @@ db.getEmail = function(username, callback) {
     }
     callback(null, row);
   });
+}
+
+db.getEmailfromInvite = function(req, token, callback) {
+  db.get('SELECT email FROM invitations WHERE token = ?', [token], function(err, row) {
+    if (err) {
+      return callback(err);
+    }
+    callback(null, row);
+  });
+}
+
+db.DeleteAfterInvite = function(token, callback) {
+  db.run('DELETE FROM invitations WHERE token = ?', [token], function(err) {
+    if (err) {
+      return callback(err);
+    }
+    callback(null,this.lastID);
+  });
+}
+
+db.addFriend = function(username, email, callback) {
+  db.run('INSERT INTO friends (username, friend) VALUES (?, ?)', [
+    username,
+    email
+  ], function(err) {
+    if (err) {
+      return callback(err);
+    }
+    callback(null, this.lastID);
+  });
+}
+
+db.getEmailfromInvite222 = async function(req, token, callback) {
+  var email = await db.get('SELECT email FROM invitations WHERE token = ?', token, function(err, row) {
+    if (err) {
+      return callback(err);
+    }
+
+  });
+  
 }
 
 module.exports = db;
