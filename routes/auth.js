@@ -17,13 +17,13 @@ var db = require('../db');
  * user is authenticated; otherwise, not.
  */
 passport.use(new LocalStrategy(function verify(username, password, cb) {
-  db.get('SELECT * FROM users WHERE username = ?', [ username ], function(err, row) {
+  db.get('SELECT * FROM users WHERE name = ?', [username], function (err, row) {
     if (err) { return cb(err); }
     if (!row) { return cb(null, false, { message: 'Incorrect username or password.' }); }
-    
-    crypto.pbkdf2(password, row.salt, 310000, 32, 'sha256', function(err, hashedPassword) {
+
+    crypto.pbkdf2(password, row.salt, 310000, 32, 'sha256', function (err, Password) {
       if (err) { return cb(err); }
-      if (!crypto.timingSafeEqual(row.hashed_password, hashedPassword)) {
+      if (!crypto.timingSafeEqual(row.password, Password)) {
         return cb(null, false, { message: 'Incorrect username or password.' });
       }
       return cb(null, row);
@@ -46,14 +46,14 @@ passport.use(new LocalStrategy(function verify(username, password, cb) {
  * fetch todo records and render the user element in the navigation bar, that
  * information is stored in the session.
  */
-passport.serializeUser(function(user, cb) {
-  process.nextTick(function() {
-    cb(null, { id: user.id, username: user.username });
+passport.serializeUser(function (user, cb) {
+  process.nextTick(function () {
+    cb(null, { id: user.user_id, username: user.name });
   });
 });
 
-passport.deserializeUser(function(user, cb) {
-  process.nextTick(function() {
+passport.deserializeUser(function (user, cb) {
+  process.nextTick(function () {
     return cb(null, user);
   });
 });
@@ -69,7 +69,7 @@ var router = express.Router();
  * username and password.  When the user submits the form, a request will be
  * sent to the `POST /login/password` route.
  */
-router.get('/login', function(req, res, next) {
+router.get('/login', function (req, res, next) {
   res.render('login');
 });
 
@@ -99,8 +99,8 @@ router.post('/login/password', passport.authenticate('local', {
  *
  * This route logs the user out.
  */
-router.post('/logout', function(req, res, next) {
-  req.logout(function(err) {
+router.post('/logout', function (req, res, next) {
+  req.logout(function (err) {
     if (err) { return next(err); }
     res.redirect('/');
   });
@@ -114,7 +114,7 @@ router.post('/logout', function(req, res, next) {
  * desired username and password.  When the user submits the form, a request
  * will be sent to the `POST /signup` route.
  */
-router.get('/signup', function(req, res, next) {
+router.get('/signup', function (req, res, next) {
   res.render('signup');
 });
 
@@ -127,15 +127,25 @@ router.get('/signup', function(req, res, next) {
  * then a new user record is inserted into the database.  If the record is
  * successfully created, the user is logged in.
  */
-router.post('/signup', function(req, res, next) {
+router.post('/signup', function (req, res, next) {
 
-  db.createUser(req.body.username, req.body.password,req.body.email, function(err, user) {
-    if (err) { return next(err); }
-    req.login(user, function(err) {
+  var salt = crypto.randomBytes(16);
+  db.run(
+    "INSERT INTO users (name, password, salt, email) VALUES (?, ?, ?, ?)",
+    [
+      req.body.username,
+      crypto.pbkdf2Sync(req.body.password, salt, 310000, 32, "sha256"),
+      salt,
+      req.body.email,
+    ],
+    function (err) {
       if (err) { return next(err); }
-      res.redirect('/');
-    });
-  });
+      req.login({ id: this.lastID, username: req.body.username }, function (err) {
+        if (err) { return next(err); }
+        res.redirect('/');
+      });
+    }
+  );
 });
 
 
