@@ -4,7 +4,7 @@ var { buildSchema } = require('graphql');
 
 
 const Database = require("better-sqlite3");
-const db2 = new Database("./var/db/giftshop.db", { verbose: console.log });
+const db2 = new Database("./var/db/products.db", { verbose: console.log });
 
 var schema = buildSchema(`
 
@@ -20,17 +20,24 @@ type Product {
     overall_rating: Float
 }
 
+
+type Product_test {
+    id: Int
+    product_name: String
+}
+
 type Query {
-    wow(i:Int): String
+    Search(keyword:String): [Product_test]
   }
 `);
 
 
 // The root provides a resolver function for each API endpoint
 var root = {
-    wow: (args) => {
-        return "Wow! That number you passed in is " + args.i + "!";
-    },
+    Search: async (args) => {
+        var x = await db2.prepare("SELECT * FROM products_test WHERE product_name LIKE ?").all("%" + args.keyword + "%");
+        return x;
+    }
 };
 var graphqlRouter = express.Router();
 graphqlRouter.use('/', graphqlHTTP({

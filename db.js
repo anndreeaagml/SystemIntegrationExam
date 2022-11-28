@@ -41,9 +41,16 @@ db.serialize(function () {
     product_desctiption TEXT, \
     main_category TEXT, \
     sub_category TEXT, \
-    price , DOUBLE \
+    price DOUBLE, \
     link TEXT, \
     overall_rating DOUBLE \
+  )"
+  );
+
+  product_db.run(
+    "CREATE TABLE IF NOT EXISTS products_test ( \
+    id INTEGER PRIMARY KEY, \
+    product_name TEXT \
   )"
   );
 
