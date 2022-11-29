@@ -38,7 +38,7 @@ db.serialize(function () {
     id INTEGER PRIMARY KEY, \
     product_name TEXT, \
     product_sub_title TEXT, \
-    product_desctiption TEXT, \
+    product_description TEXT, \
     main_category TEXT, \
     sub_category TEXT, \
     price DOUBLE, \
