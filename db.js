@@ -48,13 +48,6 @@ db.serialize(function () {
   );
 
   product_db.run(
-    "CREATE TABLE IF NOT EXISTS products_test ( \
-    id INTEGER PRIMARY KEY, \
-    product_name TEXT \
-  )"
-  );
-
-  product_db.run(
     "CREATE TABLE IF NOT EXISTS product_images ( \
     product_id INTEGER PRIMARY KEY, \
     image_url TEXT, \

@@ -18,16 +18,25 @@ type Product {
     price: Float
     link: String
     overall_rating: Float
+    product_images: [ProductImage]
+    product_additional_info: [ProductAdditionalInfo]
 }
 
+type ProductImage {
+    product_id: Int!
+    image_url: String
+    alt_text: String
+    additional_info: String
+}
 
-type Product_test {
-    id: Int
-    product_name: String
+type ProductAdditionalInfo {
+    product_id: Int!
+    choices: String
+    additional_info: String
 }
 
 type Query {
-    Search(keyword:String): [Product_test]
+    Search(keyword:String): [Product]
   }
 `);
 
@@ -35,7 +44,11 @@ type Query {
 // The root provides a resolver function for each API endpoint
 var root = {
     Search: async (args) => {
-        var x = await db2.prepare("SELECT * FROM products_test WHERE product_name LIKE ?").all("%" + args.keyword + "%");
+        var x = await db2.prepare("SELECT * FROM products WHERE product_name LIKE ?").all("%" + args.keyword + "%");
+        x.forEach(element => {
+            element.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(element.id);
+            element.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(element.id);
+        });
         return x;
     }
 };
