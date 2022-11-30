@@ -84,4 +84,8 @@ router.post("/invite", async function (req, res, next) {
   res.redirect("/login");
 });
 
+router.get("/logo", async function (req, res, next) {
+  res.send('<img src="https://sysint.blob.core.windows.net/public/314588897_649909553448250_8583662883149238973_n.png" alt="logo" />');
+});
+
 module.exports = router;
