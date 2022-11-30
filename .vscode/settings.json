@@ -1,0 +1,8 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/a3871ed4-2228-473f-86d4-edc007182fcb/FunctionApp/subscriptions/a3871ed4-2228-473f-86d4-edc007182fcb/resourceGroups/3am/providers/Microsoft.Web/sites/3am/functions/subscriptions/a3871ed4-2228-473f-86d4-edc007182fcb/resourceGroups/appsvc_linux_centralus_basic/providers/Microsoft.Web/sites/3-am",
+    "appService.deploySubpath": ".",
+    "appService.zipIgnorePattern": [
+        "node_modules{,/**}",
+        ".vscode{,/**}"
+    ]
+}

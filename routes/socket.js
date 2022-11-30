@@ -1,17 +1,12 @@
-var express = require("express");
 const _ = require("lodash");
-const port=5000;
-const http = require('http');
-const app2=express();
 
-const server = app2.listen(port, () => {
-  console.log(`We are Listening on port ${port}...`);
-});
+const express = require("express");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
 
-const io = require('socket.io')(server, {
-    path: "/server"
-});
-
+const app2 = express();
+const httpServer = createServer(app2);
+const io = new Server(httpServer, { /* options */ });
 let users = {};
 io.on('connection', (socket) => {
 
@@ -46,4 +41,5 @@ io.on('connection', (socket) => {
   });
 
 });
-module.exports = app2;
+httpServer.listen(5000);
+module.exports = httpServer;
