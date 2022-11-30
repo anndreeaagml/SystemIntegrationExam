@@ -61,7 +61,7 @@ router.post("/sendinvite", async function (req, res, next) {
       console.log("Email sent: " + info.response);
     }
   });
-  res.redirect("/");
+  res.send({ message: "Invitation sent" });
 
 });
 
@@ -81,7 +81,7 @@ router.post("/invite", async function (req, res, next) {
   db2.prepare("DELETE FROM invites WHERE token = ?").run(token);
   db2.prepare("INSERT INTO friends (name, friend) VALUES (?, ?)").run(req.body.username, friend.invited_email);
 
-  res.redirect("/login");
+  res.send({ message: "Invitation accepted" });
 });
 
 router.get("/logo", async function (req, res, next) {
