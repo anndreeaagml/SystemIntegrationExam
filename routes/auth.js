@@ -1,10 +1,9 @@
-var express = require('express');
-var passport = require('passport');
-var LocalStrategy = require('passport-local');
-var crypto = require('crypto');
-var db = require('../db');
-const app = require('../app');
-
+var express = require("express");
+var passport = require("passport");
+var LocalStrategy = require("passport-local");
+var crypto = require("crypto");
+var db = require("../db");
+const app = require("../app");
 
 /* Configure password authentication strategy.
  *
@@ -17,20 +16,43 @@ const app = require('../app');
  * the hashed password stored in the database.  If the comparison succeeds, the
  * user is authenticated; otherwise, not.
  */
-passport.use(new LocalStrategy(function verify(username, password, cb) {
-  db.get('SELECT * FROM users WHERE name = ?', [username], function (err, row) {
-    if (err) { return cb(err); }
-    if (!row) { return cb(null, false, { message: 'Incorrect username or password.' }); }
+passport.use(
+  new LocalStrategy(function verify(username, password, cb) {
+    db.get(
+      "SELECT * FROM users WHERE name = ?",
+      [username],
+      function (err, row) {
+        if (err) {
+          return cb(err);
+        }
+        if (!row) {
+          return cb(null, false, {
+            message: "Incorrect username or password.",
+          });
+        }
 
-    crypto.pbkdf2(password, row.salt, 310000, 32, 'sha256', function (err, Password) {
-      if (err) { return cb(err); }
-      if (!crypto.timingSafeEqual(row.password, Password)) {
-        return cb(null, false, { message: 'Incorrect username or password.' });
+        crypto.pbkdf2(
+          password,
+          row.salt,
+          310000,
+          32,
+          "sha256",
+          function (err, Password) {
+            if (err) {
+              return cb(err);
+            }
+            if (!crypto.timingSafeEqual(row.password, Password)) {
+              return cb(null, false, {
+                message: "Incorrect username or password.",
+              });
+            }
+            return cb(null, row);
+          }
+        );
       }
-      return cb(null, row);
-    });
-  });
-}));
+    );
+  })
+);
 
 /* Configure session management.
  *
@@ -58,7 +80,6 @@ passport.deserializeUser(function (user, cb) {
     return cb(null, user);
   });
 });
-
 
 var router = express.Router();
 
@@ -90,28 +111,87 @@ router.get('/login', function (req, res, next) {
  * When authentication fails, the user will be re-prompted to login and shown
  * a message informing them of what went wrong.
  */
-router.get('/login', function (req, res) {
-  res.send({message:'Here you can log in'});
+
+/**
+ * @swagger
+ * tags:
+ *   name: Login
+ *   description: This route prompts the user to log in.This route prompts the user to log in.
+ * /login:
+ *   get:
+ *     summary: The 'login' view renders an HTML form, into which the user enters their
+ * username and password.
+ *     tags: [login]
+ *     responses:
+ *       200:
+ *         description: When the user submits the form, a request will be
+ * sent to the `POST /login/password` route.
+ */
+
+router.get("/login", function (req, res) {
+  res.send({ message: "Here you can log in" });
 });
-router.post('/login/password', 
-  passport.authenticate('local', { failureMessage: true }),
-  function(req, res) {
-    res.status(200).send({message: 'Login successful'});
-  });
+
+/**
+ * @swagger
+ * tags:
+ *   name: Login & Password
+ *   description: This route authenticates the user by verifying a username and password.
+ * /login/password:
+ *   post:
+ *     summary: A username and password are submitted to this route via an HTML form, which
+ * was rendered by the `GET /login` route.  The username and password is
+ * authenticated using the `local` strategy.  The strategy will parse the
+ * username and password from the request and call the `verify` function.
+ *     tags: [login_password]
+ *     responses:
+ *       200:
+ *         description: Upon successful authentication, a login session will be established.  As the
+ * user interacts with the app, by clicking links and submitting forms, the
+ * subsequent requests will be authenticated by verifying the session.
+ *       401:
+ *        description: When authentication fails, the user will be re-prompted to login and shown
+ * a message informing them of what went wrong.
+ */
+
+router.post(
+  "/login/password",
+  passport.authenticate("local", { failureMessage: true }),
+  function (req, res) {
+    res.status(200).send({ message: "Login successful" });
+  }
+);
 
 /* POST /logout
  *
  * This route logs the user out.
  */
-router.post('/logout', function (req, res, next) {
+
+/**
+ * @swagger
+ * tags:
+ *  name: Logout
+ * description: This route logs the user out.
+ * /logout:
+ *  post:
+ *   summary: This route logs the user out.
+ *  tags: [logout]
+ * responses:
+ * 200:
+ * description: The user will be logged out and redirected to the login page.
+ */
+
+router.post("/logout", function (req, res, next) {
   req.logout(function (err) {
-    if (err) { return next(err); }
-    res.status(200).send({message: 'Logout successful'});
+    if (err) {
+      return next(err);
+    }
+    res.status(200).send({ message: "Logout successful" });
   });
 });
 
-router.get('/', function(req, res) {
-  res.send({message:'Hello there! Group 3am in the house!'});
+router.get("/", function (req, res) {
+  res.send({ message: "Hello there! Group 3am in the house!" });
 });
 /* GET /signup
  *
@@ -134,8 +214,34 @@ router.get('/signup', function (req, res, next) {
  * then a new user record is inserted into the database.  If the record is
  * successfully created, the user is logged in.
  */
-router.post('/signup', function (req, res, next) {
 
+/**
+ * @swagger
+ * tags:
+ * name: Signup
+ * description: This route prompts the user to sign up.
+ * /signup:
+ * get:
+ * summary:
+ * The 'signup' view renders an HTML form, into which the user enters their
+ * desired username and password.
+ * tags: [signup]
+ * responses:
+ * 200:
+ * When the user submits the form, a request
+ * will be sent to the `POST /signup` route.
+ * post:
+ * summary: A desired username and password are submitted to this route via an HTML form,
+ * which was rendered by the `GET /signup` route.  The password is hashed and
+ * then a new user record is inserted into the database.
+ * tags: [signup]
+ * responses:
+ * 200:
+ * If the record is
+ * successfully created, the user is logged in.
+ */
+
+router.post("/signup", function (req, res, next) {
   var salt = crypto.randomBytes(16);
   db.run(
     "INSERT INTO users (name, password, salt, email) VALUES (?, ?, ?, ?)",
@@ -146,14 +252,23 @@ router.post('/signup', function (req, res, next) {
       req.body.email,
     ],
     function (err) {
-      if (err) { return next(err); }
-      req.login({ id: this.lastID, username: req.body.username }, function (err) {
-        if (err) { return next(err); }
-        res.send({message: this.lastID + ' ' + req.body.username + ' ' + req.body.email});
-      });
+      if (err) {
+        return next(err);
+      }
+      req.login(
+        { id: this.lastID, username: req.body.username },
+        function (err) {
+          if (err) {
+            return next(err);
+          }
+          res.send({
+            message:
+              this.lastID + " " + req.body.username + " " + req.body.email,
+          });
+        }
+      );
     }
   );
 });
-
 
 module.exports = router;

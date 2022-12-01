@@ -35,6 +35,18 @@ var transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * @swagger
+ * tags:
+ * name: Invite
+ * description: This route sends an invite to a user.
+ * @swagger
+ * /sendinvite:
+ * post:
+ * summary: This route sends an invite to a user.
+ * tags: [invite]
+ */
+
 router.post("/sendinvite", async function (req, res, next) {
   //res.locals.currentUser = req.user;
   var user = req.user.username;
@@ -68,7 +80,7 @@ router.post("/sendinvite", async function (req, res, next) {
 router.post("/invite", async function (req, res, next) {
   var token = req.query.token;
   var salt = crypto.randomBytes(16);
-  db2.prepare("INSERT INTO users (name, password,email, salt) VALUES (?, ?, ?, ?)")
+  db2.prepare("INSERT INTO users (name, password, email, salt) VALUES (?, ?, ?, ?)")
     .run(
       req.body.username,
       crypto

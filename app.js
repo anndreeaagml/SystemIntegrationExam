@@ -7,6 +7,30 @@ var csrf = require('csurf');
 var passport = require('passport');
 var logger = require('morgan');
 
+//swagger stuff
+const cors = require("cors");
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Data format translation API",
+      version: "1.0.0",
+      description: "A simple Express API",
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+      },
+    ],
+  },
+  apis: ["./*.js"],
+};
+const specs = swaggerJsDoc(options);
+app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
+app.use(cors());
+
 // pass the session to the connect sqlite3 module
 // allowing it to inherit from session.Store
 var SQLiteStore = require('connect-sqlite3')(session);
