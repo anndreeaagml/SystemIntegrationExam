@@ -6,7 +6,8 @@ const { token } = require("morgan");
 const passport = require("passport");
 uuidv4 = require("uuid").v4;
 var ensureLoggedIn = ensureLogIn();
-
+const multer = require('multer');
+const fs = require('fs');
 var options = {
   root: __dirname + "/../var/db/",
   dotfiles: "deny",
@@ -15,6 +16,26 @@ var options = {
     "x-sent": true,
   },
 };
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads');
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname);
+  }
+});
+var upload = multer({ storage: storage });
+
+const { BlobServiceClient, StorageSharedKeyCredential } = require("@azure/storage-blob");
+
+
+const account = "sysint";
+const sas = "?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-01-31T20:54:39Z&st=2022-12-01T12:54:39Z&sip=0.0.0.0-255.255.255.255&spr=https,http&sig=UUFZl8OMYLIpv75pNpcDFJOvf3%2FFRrnm8VHpVC9Ijyw%3D";
+
+const blobServiceClient = new BlobServiceClient(`https://${account}.blob.core.windows.net${sas}`);
+
+goatcontainer = blobServiceClient.getContainerClient("goat");
+
 const Database = require("better-sqlite3");
 const db2 = new Database("./var/db/giftshop.db", { verbose: console.log });
 
@@ -36,20 +57,16 @@ var transporter = nodemailer.createTransport({
 });
 
 router.post("/sendinvite", async function (req, res, next) {
-  //res.locals.currentUser = req.user;
-  if(!req.user){
-    res.send({message: "You must be logged in to send invites."});
+  if (!req.user) {
+    res.send({ message: "You must be logged in to send invites." });
     return;
   }
-  if(!req.body.toemail){
-    res.send({message: "You must provide an email address to send an invite to."});
+  if (!req.body.toemail) {
+    res.send({ message: "You must provide an email address to send an invite to." });
     return;
   }
   var user = req.user.username;
-  console.log(user);
-  console.log(req.user);
   var email = await db2.prepare("SELECT email FROM users WHERE name = ?").get(user);
-  console.log(email);
   var toemail = req.body.toemail;
   var subject = "Invitation to join my app";
   var token = uuidv4();
@@ -73,6 +90,46 @@ router.post("/sendinvite", async function (req, res, next) {
 
 });
 
+router.put("/updateuser", upload.single('image'), async function (req, res, next) {
+  if (!req.user) {
+    res.send({ message: "You must be logged in to update your profile." });
+    return;
+  }
+  var user = req.user.username;
+  //var image = req.files[0];
+  const image = req.image;
+  const blobName = user + ".jpeg";
+  console.log(req.file.originalname);
+  // Get a block blob client
+  const blockBlobClient = goatcontainer.getBlockBlobClient(blobName);
+
+  // Display blob name and url
+  console.log(
+    `\nUploading to Azure storage as blob\n\tname: ${blobName}:\n\tURL: ${blockBlobClient.url}`
+  );
+
+  const path = "./uploads/" + req.file.originalname;
+  // Upload data to the blob
+  const data = 'Hello, World!';
+  const uploadBlobResponse = await blockBlobClient.uploadFile(path);
+  console.log(
+    `Blob was uploaded successfully. requestId: ${uploadBlobResponse.requestId}`
+  );
+  db2.prepare("UPDATE users SET image_url = ? WHERE name = ?").run(blockBlobClient.url, user);
+
+
+  try {
+    fs.unlinkSync(path)
+    //file removed
+  } catch (err) {
+    console.error(err)
+  }
+  var link= db2.prepare("SELECT image_url FROM users WHERE name = ?").get(user);
+  res.send({ message: link.image_url });
+
+});
+
+
 router.post("/invite", async function (req, res, next) {
   var token = req.query.token;
   var salt = crypto.randomBytes(16);
@@ -93,7 +150,7 @@ router.post("/invite", async function (req, res, next) {
 });
 
 router.get("/logo", async function (req, res, next) {
-  res.send('<img src="https://sysint.blob.core.windows.net/public/314588897_649909553448250_8583662883149238973_n.png" alt="logo" />');
+  res.send('<img src="https://sysint.blob.core.windows.net/goat/andreeafdf.jpeg?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-01-31T20:54:39Z&st=2022-12-01T12:54:39Z&sip=0.0.0.0-255.255.255.255&spr=https,http&sig=UUFZl8OMYLIpv75pNpcDFJOvf3%2FFRrnm8VHpVC9Ijyw%3D" alt="logo" />');
 });
 
 module.exports = router;

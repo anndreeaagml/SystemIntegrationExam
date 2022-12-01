@@ -15,7 +15,8 @@ db.serialize(function () {
     name TEXT UNIQUE, \
     password BLOB, \
     email TEXT UNIQUE, \
-    salt BLOB \
+    salt BLOB, \
+    image_url TEXT \
   )"
   );
   db.run(

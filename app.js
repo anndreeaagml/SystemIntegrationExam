@@ -5,6 +5,7 @@ var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var csrf = require('csurf');
 var passport = require('passport');
+const bodyParser = require('body-parser');
 var logger = require('morgan');
 
 // pass the session to the connect sqlite3 module
@@ -22,6 +23,7 @@ app.locals.pluralize = require('pluralize');
 
 app.use(logger('dev'));
 app.use(express.json());
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
