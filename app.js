@@ -71,6 +71,22 @@ app.use(function (req, res, next) {
 
 app.use('/', indexRouter);
 app.use('/', authRouter);
+
+/** 
+ * @swagger
+ * tags:
+ * name: GraphQL
+ * description: This route is for the GraphQL API.
+ * /graphql:
+ * get:
+ * summary: Get all data
+ * tags: [GraphQL]
+ * /graphql?=keyword:
+ * get:
+ * summary: Search by keyword
+ * tags: [GraphQL]
+*/
+
 app.use('/graphql', graphqlRouter);
 
 // catch 404 and forward to error handler
