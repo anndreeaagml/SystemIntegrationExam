@@ -22,22 +22,23 @@ var crypto = require("crypto");
 
 var router = express.Router();
 LINK = "https://threeam.onrender.com/invite?token=";
-/* GET home page. */
 
 /**
  * @swagger
  * tags:
- *  name: Homepage
- *  description: Homepage
+ *   name: API
+ *   description: Functions for the API
+ */
+
+/**
+ * @swagger
  * /:
- *  get:
- *   summary: Load the home page
- *   tags: [Homepage]
- *  responses:
- *  200:
- *  description: Success
- *  404:
- *  description: Not found
+ *   get:
+ *     summary: Go to the home page
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: The home page
  */
 
 router.get("/", function (req, res, next) {
@@ -54,13 +55,13 @@ var transporter = nodemailer.createTransport({
 
 /**
  * @swagger
- * tags:
- * name: Invite
- * description: This route sends an invite to a user.
  * /sendinvite:
- * post:
- * summary: This route sends an invite to a user.
- * tags: [invite]
+ *   post:
+ *     summary: send an invite to a user
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: send an invite to a user
  */
 
 router.post("/sendinvite", async function (req, res, next) {
@@ -115,16 +116,13 @@ router.post("/sendinvite", async function (req, res, next) {
 
 /**
  * @swagger
- * tags:
- * name: Accept Invite
- * description: This route accepts an invite.
  * /invite:
- * post:
- * summary: This route accepts an invite.
- * tags: [Accept Invite]
- * responses:
- * 200:
- * description: Invitation accepted
+ *   post:
+ *     summary: accept an invite
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: accept an invite
  */
 
 router.post("/invite", async function (req, res, next) {
@@ -155,15 +153,14 @@ router.post("/invite", async function (req, res, next) {
 
 /**
  * @swagger
- * tags:
- * name: Logo
- * description: This route returns the logo.
  * /logo:
- * get:
- * summary: This route returns the logo.
- * tags: [logo]
+ *   get:
+ *     summary: get the logo
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: get the logo
  */
-
 router.get("/logo", async function (req, res, next) {
   res.send(
     '<img src="https://sysint.blob.core.windows.net/public/314588897_649909553448250_8583662883149238973_n.png" alt="logo" />'

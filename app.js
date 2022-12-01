@@ -6,11 +6,13 @@ var session = require('express-session');
 var csrf = require('csurf');
 var passport = require('passport');
 var logger = require('morgan');
-
-//swagger stuff
 const cors = require("cors");
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require("swagger-jsdoc");
+
+//don't add stuff to the app before you define it
+var app = express();
+
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -25,25 +27,17 @@ const options = {
       },
     ],
   },
-  apis: ["./*.js"],
+  apis: ["./routes/*.js"],
 };
 const specs = swaggerJsDoc(options);
-app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
-app.use(cors());
 
 // pass the session to the connect sqlite3 module
 // allowing it to inherit from session.Store
 var SQLiteStore = require('connect-sqlite3')(session);
 
-var indexRouter = require('./routes/index');
-var authRouter = require('./routes/auth');
-var graphqlRouter = require('./routes/graph');
-
-var app = express();
-
-
+//app settings
 app.locals.pluralize = require('pluralize');
-
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -69,24 +63,14 @@ app.use(function (req, res, next) {
   next();
 });
 
+//routes
+var indexRouter = require('./routes/index');
+var authRouter = require('./routes/auth');
+var graphqlRouter = require('./routes/graph');
+
 app.use('/', indexRouter);
 app.use('/', authRouter);
-
-/** 
- * @swagger
- * tags:
- * name: GraphQL
- * description: This route is for the GraphQL API.
- * /graphql:
- * get:
- * summary: Get all data
- * tags: [GraphQL]
- * /graphql?=keyword:
- * get:
- * summary: Search by keyword
- * tags: [GraphQL]
-*/
-
+app.use('/docs', swaggerUI.serve, swaggerUI.setup(specs));
 app.use('/graphql', graphqlRouter);
 
 // catch 404 and forward to error handler
@@ -102,7 +86,7 @@ app.use(function (err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.send({message: err.message});
+  res.send({ message: err.message });
 });
 
 
