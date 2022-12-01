@@ -23,6 +23,23 @@ var crypto = require("crypto");
 var router = express.Router();
 LINK = "https://threeam.onrender.com/invite?token=";
 /* GET home page. */
+
+/**
+ * @swagger
+ * tags:
+ *  name: Homepage
+ *  description: Homepage
+ * /:
+ *  get:
+ *   summary: Load the home page
+ *   tags: [Homepage]
+ *  responses:
+ *  200:
+ *  description: Success
+ *  404:
+ *  description: Not found
+ */
+
 router.get("/", function (req, res, next) {
   res.render("home", { title: "Express" });
 });
@@ -40,7 +57,6 @@ var transporter = nodemailer.createTransport({
  * tags:
  * name: Invite
  * description: This route sends an invite to a user.
- * @swagger
  * /sendinvite:
  * post:
  * summary: This route sends an invite to a user.
@@ -49,23 +65,32 @@ var transporter = nodemailer.createTransport({
 
 router.post("/sendinvite", async function (req, res, next) {
   //res.locals.currentUser = req.user;
-  if(!req.user){
-    res.send({message: "You must be logged in to send invites."});
+  if (!req.user) {
+    res.send({ message: "You must be logged in to send invites." });
     return;
   }
-  if(!req.body.toemail){
-    res.send({message: "You must provide an email address to send an invite to."});
+  if (!req.body.toemail) {
+    res.send({
+      message: "You must provide an email address to send an invite to.",
+    });
     return;
   }
   var user = req.user.username;
   console.log(user);
   console.log(req.user);
-  var email = await db2.prepare("SELECT email FROM users WHERE name = ?").get(user);
+  var email = await db2
+    .prepare("SELECT email FROM users WHERE name = ?")
+    .get(user);
   console.log(email);
   var toemail = req.body.toemail;
   var subject = "Invitation to join my app";
   var token = uuidv4();
-  var text = "You have been invited by " + email.email + " to join my app. Please click on the link below to join." + LINK + token;
+  var text =
+    "You have been invited by " +
+    email.email +
+    " to join my app. Please click on the link below to join." +
+    LINK +
+    token;
   var mailOptions = {
     from: email.email,
     to: toemail,
@@ -73,7 +98,11 @@ router.post("/sendinvite", async function (req, res, next) {
     text: text,
   };
 
-  db2.prepare("INSERT INTO invites (token, invitee_email, invited_email) VALUES (?, ? ,?)").run(token, email.email, toemail);
+  db2
+    .prepare(
+      "INSERT INTO invites (token, invitee_email, invited_email) VALUES (?, ? ,?)"
+    )
+    .run(token, email.email, toemail);
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
@@ -82,13 +111,29 @@ router.post("/sendinvite", async function (req, res, next) {
     }
   });
   res.send({ message: "Invitation sent" });
-
 });
+
+/**
+ * @swagger
+ * tags:
+ * name: Accept Invite
+ * description: This route accepts an invite.
+ * /invite:
+ * post:
+ * summary: This route accepts an invite.
+ * tags: [Accept Invite]
+ * responses:
+ * 200:
+ * description: Invitation accepted
+ */
 
 router.post("/invite", async function (req, res, next) {
   var token = req.query.token;
   var salt = crypto.randomBytes(16);
-  db2.prepare("INSERT INTO users (name, password, email, salt) VALUES (?, ?, ?, ?)")
+  db2
+    .prepare(
+      "INSERT INTO users (name, password, email, salt) VALUES (?, ?, ?, ?)"
+    )
     .run(
       req.body.username,
       crypto
@@ -97,15 +142,32 @@ router.post("/invite", async function (req, res, next) {
       req.body.email,
       salt.toString("hex")
     );
-  var friend = await db2.prepare("SELECT invited_email FROM invites WHERE token = ?").get(token);
+  var friend = await db2
+    .prepare("SELECT invited_email FROM invites WHERE token = ?")
+    .get(token);
   db2.prepare("DELETE FROM invites WHERE token = ?").run(token);
-  db2.prepare("INSERT INTO friends (name, friend) VALUES (?, ?)").run(req.body.username, friend.invited_email);
+  db2
+    .prepare("INSERT INTO friends (name, friend) VALUES (?, ?)")
+    .run(req.body.username, friend.invited_email);
 
   res.send({ message: "Invitation accepted" });
 });
 
+/**
+ * @swagger
+ * tags:
+ * name: Logo
+ * description: This route returns the logo.
+ * /logo:
+ * get:
+ * summary: This route returns the logo.
+ * tags: [logo]
+ */
+
 router.get("/logo", async function (req, res, next) {
-  res.send('<img src="https://sysint.blob.core.windows.net/public/314588897_649909553448250_8583662883149238973_n.png" alt="logo" />');
+  res.send(
+    '<img src="https://sysint.blob.core.windows.net/public/314588897_649909553448250_8583662883149238973_n.png" alt="logo" />'
+  );
 });
 
 module.exports = router;
