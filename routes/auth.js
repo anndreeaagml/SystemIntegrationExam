@@ -161,6 +161,29 @@ router.post(
     res.status(200).send({ message: "Login successful" });
   }
 );
+router.get('/login', function (req, res) {
+  res.send({ message: 'Here you can log in' });
+});
+router.post('/login/password', function(req, res, next) {
+  if (!req.body.username || !req.body.password) {
+    return res.status(400).send({ message: 'Please fill out all fields' });
+  }
+  passport.authenticate('local', function(err, user, info) {
+    if (err) {
+      return next(err); // will generate a 500 error
+    }
+    // Generate a JSON response reflecting authentication status
+    if (! user) {
+      return res.send(401,{ success : false, message : 'authentication failed' });
+    }
+    req.login(user, function(err){
+      if(err){
+        return next(err);
+      }
+      return res.send({ success : true, message : 'authentication succeeded' });        
+    });
+  })(req, res, next);
+});
 
 /* POST /logout
  *
@@ -192,6 +215,12 @@ router.post("/logout", function (req, res, next) {
 
 router.get("/", function (req, res) {
   res.send({ message: "Hello there! Group 3am in the house!" });
+    if (err) { return next(err); }
+    res.status(200).send({ message: 'Logout successful' });
+  });
+
+router.get('/', function (req, res) {
+  res.send({ message: 'Hello there! Group 3am in the house!' });
 });
 /* GET /signup
  *
@@ -214,6 +243,36 @@ router.get('/signup', function (req, res, next) {
  * then a new user record is inserted into the database.  If the record is
  * successfully created, the user is logged in.
  */
+router.post('/signup', function (req, res, next) {
+  if (!req.body.username || !req.body.password) {
+    return res.status(400).send({ message: 'Please fill out all fields' });
+  }
+  if (req.body.password.length < 8) {
+    return res.status(400).send({ message: 'Password must be at least 8 characters long' });
+  }
+  if (req.body.username.length < 5) {
+    return res.status(400).send({ message: 'Username must be at least 5 characters long' });
+  }
+  if (req.body.username.length > 20) {
+    return res.status(400).send({ message: 'Username must be less than 20 characters long' });
+  }
+  if (req.body.password.length > 20) {
+    return res.status(400).send({ message: 'Password must be less than 20 characters long' });
+  }
+  if (req.body.username.match(/^[a-zA-Z0-9]+$/) == null) {
+    return res.status(400).send({ message: 'Username can only contain letters and numbers' });
+  }
+
+  if (req.body.email.match(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/) == null) {
+    return res.status(400).send({ message: 'Email must be in the format of example@example.example' });
+  }
+  if (req.body.email.length > 50) {
+    return res.status(400).send({ message: 'Email must be less than 50 characters long' });
+  }
+  if (req.body.email.length < 5) {
+    return res.status(400).send({ message: 'Email must be at least 5 characters long' });
+  }
+});
 
 /**
  * @swagger
@@ -267,6 +326,11 @@ router.post("/signup", function (req, res, next) {
           });
         }
       );
+      if (err) { return next(err); }
+      req.login({ id: this.lastID, username: req.body.username }, function (err) {
+        if (err) { return next(err); }
+        res.send({ message: 'username: '+ req.body.username + ' email: ' + req.body.email });
+      });
     }
   );
 });
