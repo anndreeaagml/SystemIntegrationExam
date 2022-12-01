@@ -21,7 +21,7 @@ const db2 = new Database("./var/db/giftshop.db", { verbose: console.log });
 var crypto = require("crypto");
 
 var router = express.Router();
-LINK = "http://localhost:3000/invite?token=";
+LINK = "https://threeam.onrender.com/invite?token=";
 /* GET home page. */
 router.get("/", function (req, res, next) {
   res.render("home", { title: "Express" });
@@ -37,6 +37,14 @@ var transporter = nodemailer.createTransport({
 
 router.post("/sendinvite", async function (req, res, next) {
   //res.locals.currentUser = req.user;
+  if(!req.user){
+    res.send({message: "You must be logged in to send invites."});
+    return;
+  }
+  if(!req.body.toemail){
+    res.send({message: "You must provide an email address to send an invite to."});
+    return;
+  }
   var user = req.user.username;
   console.log(user);
   console.log(req.user);
