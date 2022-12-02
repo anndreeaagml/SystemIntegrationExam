@@ -90,9 +90,34 @@ router.get('/login', function (req, res, next) {
  * When authentication fails, the user will be re-prompted to login and shown
  * a message informing them of what went wrong.
  */
+
+
+/**
+ * @swagger
+ * /login:
+ *   get:
+ *     summary: Login page
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Login page
+ */
+
 router.get('/login', function (req, res) {
   res.send({ message: 'Here you can log in' });
 });
+
+/**
+ * @swagger
+ * /login/password:
+ *   post:
+ *     summary: Login with password
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Login with password
+ */
+
 router.post('/login/password', function (req, res, next) {
   if (!req.body.username || !req.body.password) {
     return res.status(400).send({ message: 'Please fill out all fields' });
@@ -118,12 +143,35 @@ router.post('/login/password', function (req, res, next) {
  *
  * This route logs the user out.
  */
+
+/**
+ * @swagger
+ * /logout:
+ *   post:
+ *     summary: Logout page
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Logout page
+ */
+
 router.post('/logout', function (req, res, next) {
   req.logout(function (err) {
     if (err) { return next(err); }
     res.status(200).send({ message: 'Logout successful' });
   });
 });
+
+/**
+ * @swagger
+ * /:
+ *   GET:
+ *     summary: Get home page
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Get home page
+ */
 
 router.get('/', function (req, res) {
   res.send({ message: 'Hello there! Group 3am in the house!' });
@@ -149,6 +197,18 @@ router.get('/signup', function (req, res, next) {
  * then a new user record is inserted into the database.  If the record is
  * successfully created, the user is logged in.
  */
+
+/**
+ * @swagger
+ * /signup:
+ *   post:
+ *     summary: Signup page
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Signup page
+ */
+
 router.post('/signup', function (req, res, next) {
   if (!req.body.username || !req.body.password) {
     return res.status(400).send({ message: 'Please fill out all fields' });

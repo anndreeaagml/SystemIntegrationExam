@@ -7,20 +7,36 @@ var csrf = require('csurf');
 var passport = require('passport');
 const bodyParser = require('body-parser');
 var logger = require('morgan');
-
+const cors = require("cors");
+const swaggerUI = require("swagger-ui-express");
+const swaggerJsDoc = require("swagger-jsdoc");
 // pass the session to the connect sqlite3 module
 // allowing it to inherit from session.Store
 var SQLiteStore = require('connect-sqlite3')(session);
 
-var indexRouter = require('./routes/index');
-var authRouter = require('./routes/auth');
-var graphqlRouter = require('./routes/graph');
+const options = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "Goat API",
+      version: "1.0.0",
+      description: "A simple Express API",
+    },
+    servers: [
+      {
+        url: "https://threeam.onrender.com",
+      },
+    ],
+  },
+  apis: ["./routes/*.js"],
+};
+const specs = swaggerJsDoc(options);
 
 var app = express();
 
-
+//app settings
 app.locals.pluralize = require('pluralize');
-
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
@@ -47,10 +63,16 @@ app.use(function (req, res, next) {
   next();
 });
 
+//routes
+
+var indexRouter = require('./routes/index');
+var authRouter = require('./routes/auth');
+var graphqlRouter = require('./routes/graph');
+
 app.use('/', indexRouter);
 app.use('/', authRouter);
 app.use('/graphql', graphqlRouter);
-
+app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));

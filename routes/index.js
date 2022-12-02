@@ -8,6 +8,7 @@ uuidv4 = require("uuid").v4;
 var ensureLoggedIn = ensureLogIn();
 const multer = require('multer');
 const fs = require('fs');
+
 var options = {
   root: __dirname + "/../var/db/",
   dotfiles: "deny",
@@ -56,6 +57,24 @@ var transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * @swagger
+ * tags:
+ *   name: API
+ *   description: API for the Goat Gift Shop
+ */
+
+/**
+ * @swagger
+ * /sendinvite:
+ *   get:
+ *     summary: Send an invite to a user
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: Send an invite to a user
+ */
+
 router.post("/sendinvite", async function (req, res, next) {
   if (!req.user) {
     res.send({ message: "You must be logged in to send invites." });
@@ -89,6 +108,17 @@ router.post("/sendinvite", async function (req, res, next) {
   res.send({ message: "Invitation sent" });
 
 });
+
+/**
+ * @swagger
+ * /updateuser:
+ *   put:
+ *     summary: Updates a user's information
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: User updated
+ */
 
 router.put("/updateuser", upload.single('image'), async function (req, res, next) {
   if (!req.user) {
@@ -129,6 +159,16 @@ router.put("/updateuser", upload.single('image'), async function (req, res, next
 
 });
 
+/**
+ * @swagger
+ * /invite:
+ *   post:
+ *     summary: Confirm an invite
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: Confirmation of invite
+ */
 
 router.post("/invite", async function (req, res, next) {
   var token = req.query.token;
@@ -148,6 +188,17 @@ router.post("/invite", async function (req, res, next) {
 
   res.send({ message: "Invitation accepted" });
 });
+
+/**
+ * @swagger
+ * /logo:
+ *   get:
+ *     summary: Get the logo
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: Get the logo
+ */
 
 router.get("/logo", async function (req, res, next) {
   res.send('<img src="https://sysint.blob.core.windows.net/goat/andreeafdf.jpeg?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-01-31T20:54:39Z&st=2022-12-01T12:54:39Z&sip=0.0.0.0-255.255.255.255&spr=https,http&sig=UUFZl8OMYLIpv75pNpcDFJOvf3%2FFRrnm8VHpVC9Ijyw%3D" alt="logo" />');

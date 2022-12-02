@@ -53,6 +53,17 @@ var root = {
     }
 };
 var graphqlRouter = express.Router();
+
+/**
+ * @swagger
+ * /graphql:
+ *   post:
+ *     summary: Search for a product
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *         description: Search for a product
+ */
 graphqlRouter.use('/', graphqlHTTP({
     schema: schema,
     rootValue: root,
