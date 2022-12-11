@@ -15,7 +15,7 @@ type Product {
     product_description: String
     main_category: String
     sub_category: String
-    price: Float
+    price: String
     link: String
     overall_rating: Float
     product_images: [ProductImage]
@@ -36,7 +36,9 @@ type ProductAdditionalInfo {
 }
 
 type Query {
-    Search(keyword:String): [Product]
+    Search(keyword:String): [Product],
+    GetProduct(id:Int): Product,
+    GetAllProducts: [Product]
   }
 `);
 
@@ -45,6 +47,20 @@ type Query {
 var root = {
     Search: async (args) => {
         var x = await db2.prepare("SELECT * FROM products WHERE product_name LIKE ?").all("%" + args.keyword + "%");
+        x.forEach(element => {
+            element.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(element.id);
+            element.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(element.id);
+        });
+        return x;
+    },
+    GetProduct: async (args) => {
+        var x = await db2.prepare("SELECT * FROM products WHERE id = ?").get(args.id);
+        x.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(x.id);
+        x.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(x.id);
+        return x;
+    },
+    GetAllProducts: async () => {
+        var x = await db2.prepare("SELECT * FROM products").all();
         x.forEach(element => {
             element.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(element.id);
             element.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(element.id);
