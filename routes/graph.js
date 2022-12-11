@@ -47,8 +47,12 @@ type Query {
 // The root provides a resolver function for each API endpoint
 var root = {
     Search: async (args) => {
-        var x = await db2.prepare("SELECT * FROM products WHERE product_name LIKE ?").all("%" + args.keyword + "%");
+        var x = await db2.prepare
+            ("SELECT * FROM products WHERE product_name LIKE ? OR product_description LIKE ? OR main_category LIKE ? OR sub_category LIKE ?")
+            .all("%" + args.keyword + "%", "%" + args.keyword + "%", "%" + args.keyword + "%", "%" + args.keyword + "%");
         x.forEach(element => {
+            if (element.price == '') element.price = 0;
+            if (element.overall_rating == '') element.overall_rating = 0;
             element.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(element.id);
             element.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(element.id);
         });
@@ -56,18 +60,18 @@ var root = {
     },
     GetProduct: async (args) => {
         var x = await db2.prepare("SELECT * FROM products WHERE id = ?").get(args.id);
-        if (x.price == null) x.price = 0;
-        if (x.overall_rating == null) x.overall_rating = 0;
+        if (x.price == '') x.price = 0;
+        if (x.overall_rating == '') { x.overall_rating = 0; }
 
-        x.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(x.id);
-        x.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(x.id);
+        x.product_images = await db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(x.id);
+        x.product_additional_info = await db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(x.id);
         return x;
     },
     GetAllProducts: async () => {
         var x = await db2.prepare("SELECT * FROM products").all();
         x.forEach(element => {
-            if (element.price == null) x.price = 0;
-            if (element.overall_rating == null) x.overall_rating = 0;
+            if (element.price == '') element.price = 0;
+            if (element.overall_rating == '') element.overall_rating = 0;
             element.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(element.id);
             element.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(element.id);
         });
