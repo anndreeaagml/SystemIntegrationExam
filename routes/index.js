@@ -1,6 +1,5 @@
 var express = require("express");
 var ensureLogIn = require("connect-ensure-login").ensureLoggedIn;
-var db = require("../db");
 var nodemailer = require("nodemailer");
 const { token } = require("morgan");
 const passport = require("passport");
@@ -154,7 +153,7 @@ router.put("/updateuser", upload.single('image'), async function (req, res, next
   } catch (err) {
     console.error(err)
   }
-  var link= db2.prepare("SELECT image_url FROM users WHERE name = ?").get(user);
+  var link = db2.prepare("SELECT image_url FROM users WHERE name = ?").get(user);
   res.send({ message: link.image_url });
 
 });

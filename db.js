@@ -20,6 +20,13 @@ db.serialize(function () {
   )"
   );
   db.run(
+    "CREATE TABLE IF NOT EXISTS wishes ( \
+    id INTEGER PRIMARY KEY, \
+    user_id INTEGER, \
+    product_id INTEGER \
+  )"
+  );
+  db.run(
     "CREATE TABLE IF NOT EXISTS invites ( \
     token TEXT PRIMARY KEY, \
     invitee_email TEXT, \

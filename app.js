@@ -68,9 +68,11 @@ app.use(function (req, res, next) {
 var indexRouter = require('./routes/index');
 var authRouter = require('./routes/auth');
 var graphqlRouter = require('./routes/graph');
+var wishesRouter = require('./routes/wishes');
 
 app.use('/', indexRouter);
 app.use('/', authRouter);
+app.use('/', wishesRouter);
 app.use('/graphql', graphqlRouter);
 app.use("/docs", swaggerUI.serve, swaggerUI.setup(specs));
 // catch 404 and forward to error handler
@@ -86,7 +88,7 @@ app.use(function (err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.send({message: err.message});
+  res.send({ message: err.message });
 });
 
 
