@@ -115,7 +115,21 @@ function onError(error) {
 /**
  * Event listener for HTTP server "listening" event.
  */
+var ftpcli = require('ftp-client');
 
+ftpcli = new ftpcli({
+    host: '20.115.84.85',
+    port: 21,
+    user: 'threeam',
+    password: '3amDockerImage'
+});
+/*
+ftpcli.connect(function() {
+    ftpcli.download('/ftp/files', './var/db', function(result) {
+        console.log(result);
+    });
+});
+*/
 function onListening() {
   var addr = server.address();
   var bind = typeof addr === 'string'

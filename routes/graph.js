@@ -3,6 +3,7 @@ var { graphqlHTTP } = require('express-graphql');
 var { buildSchema } = require('graphql');
 
 
+
 const Database = require("better-sqlite3");
 const db2 = new Database("./var/db/products.db", { verbose: console.log });
 
@@ -15,7 +16,7 @@ type Product {
     product_description: String
     main_category: String
     sub_category: String
-    price: String
+    price: Float
     link: String
     overall_rating: Float
     product_images: [ProductImage]
@@ -36,9 +37,7 @@ type ProductAdditionalInfo {
 }
 
 type Query {
-    Search(keyword:String): [Product],
-    GetProduct(id:Int): Product,
-    GetAllProducts: [Product]
+    Search(keyword:String): [Product]
   }
 `);
 
@@ -66,7 +65,7 @@ var root = {
             element.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(element.id);
         });
         return x;
-    }
+    },
 };
 var graphqlRouter = express.Router();
 

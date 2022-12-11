@@ -5,7 +5,7 @@ uuid4 = require("uuid").v4;
 mkdirp.sync("./var/db");
 
 var db = new sqlite3.Database("./var/db/giftshop.db");
-var product_db = new sqlite3.Database("./var/db/products.db");
+//var product_db = new sqlite3.Database("./var/db/products.db");
 
 db.serialize(function () {
   // create the database schema for the todos app
@@ -41,7 +41,7 @@ db.serialize(function () {
     friend TEXT \
   )"
   );
-
+/*
   product_db.run(
     "CREATE TABLE IF NOT EXISTS products ( \
     id INTEGER PRIMARY KEY, \
@@ -72,6 +72,7 @@ db.serialize(function () {
     additional_info TEXT \
   )"
   );
+*/
 });
 
 module.exports = db;
