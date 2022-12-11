@@ -16,8 +16,8 @@ var crypto = require("crypto");
 var router = express.Router();
 
 const feed = new Feed({
-  title: "Feed Title",
-  description: "This is my personal feed!",
+  title: "Feed Goat",
+  description: "This is the feed for the Goat Gift Shop",
   id: "http://example.com/",
   link: "http://example.com/",
   language: "en", // optional, used only in RSS 2.0, possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
@@ -75,26 +75,14 @@ router.post("/wishes", async function (req, res, next) {
   db2.prepare("INSERT INTO wishes (user_id, product_id, date_added) VALUES (?, ?, ?)").run(user_id.user_id, prod_id, date);
   feed.addItem({
     title: "New Wish",
-    id: "post.url",
-    link: "post.url",
-    description: "post.description",
-    content: "post.content",
+    description: user + "added a new item to their wishlist",
+    content: user + "added item no." + prod_id + " to their wishlist",
     author: [
       {
-        name: "Jane Doe",
-        email: "janedoe@example.com",
-        link: "https://example.com/janedoe"
+        name: user
       }
     ],
-    contributor: [
-      {
-        name: "Shawn Kemp",
-        email: "shawnkemp@example.com",
-        link: "https://example.com/shawnkemp"
-      }
-    ],
-    date: new Date(),
-    image: "post.image"
+    date: new Date()
   });
   var x = feed.atom1();
 
