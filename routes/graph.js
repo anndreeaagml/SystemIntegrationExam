@@ -10,7 +10,7 @@ const db2 = new Database("./var/db/products.db", { verbose: console.log });
 var schema = buildSchema(`
 
 type Product {
-    id: Int!
+    id: String!
     product_name: String!
     product_sub_title: String
     product_description: String
@@ -24,20 +24,22 @@ type Product {
 }
 
 type ProductImage {
-    product_id: Int!
+    product_id: String!
     image_url: String
     alt_text: String
     additional_info: String
 }
 
 type ProductAdditionalInfo {
-    product_id: Int!
+    product_id: String!
     choices: String
     additional_info: String
 }
 
 type Query {
-    Search(keyword:String): [Product]
+    Search(keyword:String): [Product],
+    GetProduct(id:String): Product,
+    GetAllProducts: [Product]
   }
 `);
 
@@ -54,6 +56,9 @@ var root = {
     },
     GetProduct: async (args) => {
         var x = await db2.prepare("SELECT * FROM products WHERE id = ?").get(args.id);
+        if (x.price == null) x.price = 0;
+        if (x.overall_rating == null) x.overall_rating = 0;
+
         x.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(x.id);
         x.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(x.id);
         return x;
@@ -61,6 +66,8 @@ var root = {
     GetAllProducts: async () => {
         var x = await db2.prepare("SELECT * FROM products").all();
         x.forEach(element => {
+            if (element.price == null) x.price = 0;
+            if (element.overall_rating == null) x.overall_rating = 0;
             element.product_images = db2.prepare("SELECT * FROM product_images WHERE product_id = ?").all(element.id);
             element.product_additional_info = db2.prepare("SELECT * FROM products_additional_info WHERE product_id = ?").all(element.id);
         });
