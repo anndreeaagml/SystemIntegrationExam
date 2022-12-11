@@ -66,9 +66,9 @@ var transporter = nodemailer.createTransport({
 /**
  * @swagger
  * /sendinvite:
- *   get:
+ *   post:
  *     summary: Send an invite to a user
- *     tags: [API]
+ *     tags: [Invite]
  *     requestBody:
  *       description: Send an invite to a user
  *       content:
@@ -80,27 +80,49 @@ var transporter = nodemailer.createTransport({
  *                 type: string
  *                 description: The email address to send the invite to
  *                 example: examlple@email.com
- *       required: true
+ *               url:
+ *                 type: string
+ *                 description: The url to the site where the token will be used
+ *                 example: https://example.com/invite
+ *               manual_input:
+ *                 type: string
+ *                 description: Optional. If it has any value, the invite will be sent with a token that the user will have to manually input in the url.
+ *                 example: Overwrite this with any value to send a manual input invite. Leave it blank to send a link with the token in the url i.e. https://example.com/?token=123456789
+ *                 required: false
  *     responses:
+ *       400:
+ *         description: You must be logged in to send invites.
+ *       401:
+ *         description: You must provide an email address to send an invite to.
+ *       402:
+ *         description: Oh..you forgot to put the url to the site
  *       200:
  *         description: Send an invite to a user
  */
 
 router.post("/sendinvite", async function (req, res, next) {
   if (!req.user) {
-    res.send({ message: "You must be logged in to send invites." });
+    res.send(400,{ message: "You must be logged in to send invites." });
     return;
   }
   if (!req.body.toemail) {
-    res.send({ message: "You must provide an email address to send an invite to." });
+    res.send(401,{ message: "You must provide an email address to send an invite to." });
+    return;
+  }
+  if (!req.body.url) {
+    res.send(402,{ message: "Oh..you forgot to put the url to the site" });
     return;
   }
   var user = req.user.username;
   var email = await db2.prepare("SELECT email FROM users WHERE name = ?").get(user);
   var toemail = req.body.toemail;
+  var url = req.body.url;
   var subject = "Invitation to join my app";
   var token = uuidv4();
-  var text = "You have been invited by " + email.email + " to join my app. Please click on the link below to join." + LINK + token;
+  var text = "You have been invited by " + email.email + " to join my app. Please click on the link below to join: "+url+token;
+  if(req.body.manual_input){
+    text = "You have been invited by " + email.email + " to join my app. Please enter the token: "+token+" in the following link: "+url;
+  }
   var mailOptions = {
     from: email.email,
     to: toemail,
@@ -186,7 +208,7 @@ router.put("/updateuser", upload.single('image'), async function (req, res, next
  * /invite:
  *   post:
  *     summary: Confirm an invite
- *     tags: [API]
+ *     tags: [Invite]
  *     parameters:
  *       - in: query
  *         name: token
@@ -195,6 +217,25 @@ router.put("/updateuser", upload.single('image'), async function (req, res, next
  *           example: aaaabaca-1234-4e96-b688-7c380d246d6d
  *         required: true
  *         description: The token of the invite
+ *     requestBody:
+ *       description: Confirm an invite
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: The username of the user
+ *                 example: JohnnyBoy
+ *               password:
+ *                 type: string
+ *                 description: The password of the user
+ *                 example: Password123
+ *               email:
+ *                 type: string
+ *                 description: The email of the user
+ *                 example: email@email.com
  *     responses:
  *       200:
  *         description: Confirmation of invite

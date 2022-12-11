@@ -48,7 +48,7 @@ const feed = new Feed({
  * /wishes:
  *   post:
  *     summary: Add a wish to a user's wishlist
- *     tags: [API]
+ *     tags: [Wishlist]
  *     requestBody:
  *       description: Add a wish to a user's wishlist
  *       content:
@@ -113,7 +113,7 @@ router.post("/wishes", async function (req, res, next) {
  * /wishes:
  *   delete:
  *     summary: Remove a wish from a user's wishlist
- *     tags: [API]
+ *     tags: [Wishlist]
  *     requestBody:
  *       description: Remove a wish from a user's wishlist
  *       content:
@@ -157,7 +157,7 @@ router.delete("/wishes", async function (req, res, next) {
  * /wishes:
  *   get:
  *     summary: Get a user's wishlist
- *     tags: [API]
+ *     tags: [Wishlist]
  *     responses:
  *       401:
  *         description: You must be logged in to get your wishlist.
