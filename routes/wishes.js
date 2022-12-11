@@ -43,11 +43,12 @@ router.post("/wishes", async function (req, res, next) {
     return;
   }
   var user = req.user.username;
+  var date = new Date().toISOString().slice(0, 19).replace('T', ' ');
   var user_id = await db2.prepare("SELECT user_id FROM users WHERE name = ?").get(user);
   var prod_id = req.body.product_id;
 
 
-  db2.prepare("INSERT INTO wishes (user_id, product_id) VALUES (?, ?)").run(user_id.user_id, prod_id);
+  db2.prepare("INSERT INTO wishes (user_id, product_id, date_added) VALUES (?, ?, ?)").run(user_id.user_id, prod_id, date);
   res.send({ message: "Wish added" });
 });
 
