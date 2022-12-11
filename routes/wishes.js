@@ -49,18 +49,33 @@ const feed = new Feed({
  *   post:
  *     summary: Add a wish to a user's wishlist
  *     tags: [API]
+ *     requestBody:
+ *       description: Add a wish to a user's wishlist
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               product_id:
+ *                 type: string
+ *                 description: The product_id of the product to add to the wishlist
+ *                 example: 1444
  *     responses:
+ *       401:
+ *         description: You must be logged in to add wishes.
+ *       400:
+ *         description: You must specify a product_id to add
  *       200:
  *         description: Add a wish to a user's wishlist
  */
 
 router.post("/wishes", async function (req, res, next) {
   if (!req.user) {
-    res.send({ message: "You must be logged in to add wishes." });
+    res.send(401,{ message: "You must be logged in to add wishes." });
     return;
   }
   if (!req.body.product_id) {
-    res.send({ message: "You must specify a product_id to add" });
+    res.send(400,{ message: "You must specify a product_id to add" });
     return;
   }
   var user = req.user.username;
@@ -99,18 +114,33 @@ router.post("/wishes", async function (req, res, next) {
  *   delete:
  *     summary: Remove a wish from a user's wishlist
  *     tags: [API]
+ *     requestBody:
+ *       description: Remove a wish from a user's wishlist
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               product_id:
+ *                 type: string
+ *                 description: The product_id of the product to remove from the wishlist
+ *                 example: 1444
  *     responses:
+ *       401:
+ *         description: You must be logged in to remove wishes.
+ *       400:
+ *         description: You must specify a product_id to remove
  *       200:
  *         description: Remove a wish from a user's wishlist
  */
 
 router.delete("/wishes", async function (req, res, next) {
   if (!req.user) {
-    res.send({ message: "You must be logged in to remove wishes." });
+    res.send(401,{ message: "You must be logged in to remove wishes." });
     return;
   }
   if (!req.body.product_id) {
-    res.send({ message: "You must specify a product_id to remove" });
+    res.send(400,{ message: "You must specify a product_id to remove" });
     return;
   }
   var user = req.user.username;
@@ -129,8 +159,34 @@ router.delete("/wishes", async function (req, res, next) {
  *     summary: Get a user's wishlist
  *     tags: [API]
  *     responses:
+ *       401:
+ *         description: You must be logged in to get your wishlist.
+ *       400:
+ *         description: You must specify a product_id to remove
  *       200:
  *         description: Get a user's wishlist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 wishes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       product_id:
+ *                         type: string
+ *                         description: The product_id of the product to remove from the wishlist
+ *                         example: 1444
+ *                       date_added:
+ *                         type: string
+ *                         description: The date the product was added to the wishlist
+ *                         example: 2021-04-01 12:00:00
+ *                       user_id:
+ *                         type: string
+ *                         description: The user_id of the user who added the product to the wishlist
+ *                         example: 1
  */
 
 router.get("/wishes", async function (req, res, next) {

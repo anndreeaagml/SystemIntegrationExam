@@ -69,6 +69,18 @@ var transporter = nodemailer.createTransport({
  *   get:
  *     summary: Send an invite to a user
  *     tags: [API]
+ *     requestBody:
+ *       description: Send an invite to a user
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               toemail:
+ *                 type: string
+ *                 description: The email address to send the invite to
+ *                 example: examlple@email.com
+ *       required: true
  *     responses:
  *       200:
  *         description: Send an invite to a user
@@ -114,6 +126,17 @@ router.post("/sendinvite", async function (req, res, next) {
  *   put:
  *     summary: Updates a user's information
  *     tags: [API]
+ *     requestBody:
+ *       description: Uploads a image to update the user's profile picture
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               image:
+ *                 type: image
+ *                 description: The image to update the user's profile picture with
+ *                 example: image
  *     responses:
  *       200:
  *         description: User updated
@@ -164,6 +187,14 @@ router.put("/updateuser", upload.single('image'), async function (req, res, next
  *   post:
  *     summary: Confirm an invite
  *     tags: [API]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         schema:
+ *           type: string
+ *           example: aaaabaca-1234-4e96-b688-7c380d246d6d
+ *         required: true
+ *         description: The token of the invite
  *     responses:
  *       200:
  *         description: Confirmation of invite

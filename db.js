@@ -22,8 +22,8 @@ db.serialize(function () {
   db.run(
     "CREATE TABLE IF NOT EXISTS wishes ( \
     id INTEGER PRIMARY KEY, \
-    user_id INTEGER, \
-    product_id INTEGER, \
+    user_id TEXT, \
+    product_id TEXT, \
     date_added TEXT \
   )"
   );

@@ -24,8 +24,11 @@ const options = {
     },
     servers: [
       {
-        url: "https://threeam.onrender.com",
+        url: "https://threeam.onrender.com"
       },
+      {
+        url: "http://localhost:3000"
+      }
     ],
   },
   apis: ["./routes/*.js"],
@@ -89,6 +92,7 @@ app.use(function (err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.send({ message: err.message });
+  
 });
 
 

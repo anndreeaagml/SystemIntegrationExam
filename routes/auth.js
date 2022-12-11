@@ -113,9 +113,31 @@ router.get('/login', function (req, res) {
  *   post:
  *     summary: Login with password
  *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Username
+ *               password:
+ *                 type: string
+ *                 description: Password
+ *             example:
+ *               username: JohnnyBoy
+ *               password: Password123
  *     responses:
+ *       400:
+ *         description: Please fill out all fields
+ *       401:
+ *         description: authentication failed
+ *       500:
+ *         description: Internal server error
  *       200:
- *         description: Login with password
+ *         description: Logged in successfully
  */
 
 router.post('/login/password', function (req, res, next) {
@@ -152,7 +174,7 @@ router.post('/login/password', function (req, res, next) {
  *     tags: [Auth]
  *     responses:
  *       200:
- *         description: Logout page
+ *         description: Loged out successfully
  */
 
 router.post('/logout', function (req, res, next) {
@@ -204,9 +226,33 @@ router.get('/signup', function (req, res, next) {
  *   post:
  *     summary: Signup page
  *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Username
+ *               password:
+ *                 type: string
+ *                 description: Password
+ *               email:
+ *                 type: string
+ *                 description: Email
+ *             example:
+ *               username: JohnnyBoy
+ *               password: Password123
+ *               email: email@email.com
  *     responses:
- *       200:
- *         description: Signup page
+ *      400:
+ *        description: Bad request
+ *      500:
+ *        description: Internal server error
+ *      200:
+ *        description: Signup successful
  */
 
 router.post('/signup', function (req, res, next) {
