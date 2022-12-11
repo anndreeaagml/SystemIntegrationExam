@@ -1,4 +1,5 @@
 var express = require("express");
+const Feed = require('feed').Feed;
 var ensureLogIn = require("connect-ensure-login").ensureLoggedIn;
 const { token } = require("morgan");
 const passport = require("passport");
@@ -13,6 +14,26 @@ const db2 = new Database("./var/db/giftshop.db", { verbose: console.log });
 var crypto = require("crypto");
 
 var router = express.Router();
+
+const feed = new Feed({
+  title: "Feed Title",
+  description: "This is my personal feed!",
+  id: "http://example.com/",
+  link: "http://example.com/",
+  language: "en", // optional, used only in RSS 2.0, possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
+  image: "http://example.com/image.png",
+  favicon: "http://example.com/favicon.ico",
+  copyright: "All rights reserved 2013, John Doe",
+  feedLinks: {
+    json: "https://example.com/json",
+    atom: "https://example.com/atom"
+  },
+  author: {
+    name: "John Doe",
+    email: "johndoe@example.com",
+    link: "https://example.com/johndoe"
+  }
+});
 
 
 /**
@@ -48,7 +69,39 @@ router.post("/wishes", async function (req, res, next) {
   var prod_id = req.body.product_id;
 
 
+
+
+
   db2.prepare("INSERT INTO wishes (user_id, product_id, date_added) VALUES (?, ?, ?)").run(user_id.user_id, prod_id, date);
+  feed.addItem({
+    title: "New Wish",
+    id: "post.url",
+    link: "post.url",
+    description: "post.description",
+    content: "post.content",
+    author: [
+      {
+        name: "Jane Doe",
+        email: "janedoe@example.com",
+        link: "https://example.com/janedoe"
+      }
+    ],
+    contributor: [
+      {
+        name: "Shawn Kemp",
+        email: "shawnkemp@example.com",
+        link: "https://example.com/shawnkemp"
+      }
+    ],
+    date: new Date(),
+    image: "post.image"
+  });
+  var x = feed.atom1();
+
+  fs.writeFile('feed.xml', x, function (err) {
+    if (err) throw err;
+    console.log('Saved!');
+  });
   res.send({ message: "Wish added" });
 });
 
