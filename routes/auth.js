@@ -160,7 +160,7 @@ router.post('/login/password', function (req, res, next) {
         return next(err);
       }
       
-      return res.cookie('connect.sid', 's:' + signature.sign(req.sessionID, 'keyboard cat'), { httpOnly: true }).status(200).send(JSON.stringify({ message: 'Logged in successfully' }));
+      return res.status(200).send({ message: 'Logged in successfully' });
 
     });
   })(req, res, next);

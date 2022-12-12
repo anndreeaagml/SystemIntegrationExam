@@ -39,8 +39,8 @@ var app = express();
 
 //app settings
 app.locals.pluralize = require('pluralize');
-app.use(cors());
-//require("./enable-cors.js")(app)
+app.use(cors(({credentials:true})));
+require("./enable-cors.js")(app)
 app.use(logger('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
