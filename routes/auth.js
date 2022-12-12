@@ -4,6 +4,7 @@ var LocalStrategy = require('passport-local');
 var crypto = require('crypto');
 var db = require('../db');
 const app = require('../app');
+const signature = require('cookie-signature');
 
 
 /* Configure password authentication strategy.
