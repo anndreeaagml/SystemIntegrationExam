@@ -7,8 +7,8 @@
 var app = require('../app');
 const { Server } = require("socket.io")
 var db = require('../db');
-//var db= require('better-sqlite3')('../var/db/giftshop.db');
-
+const Database = require('better-sqlite3');
+const db2 = new Database('./var/db/giftshop.db', { verbose: console.log });
 var debug = require('debug')('todos:server');
 var http = require('http');
 var _ = require('lodash');
@@ -25,47 +25,97 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-const io = new Server(server, { /* options */ });
+const io = new Server(server, { cors: { origin: "*" } });
 let users = {};
-/*
-io.on('connection', function(socket){
+let socketsforuser = {};
+io.on('connection', function (socket) {
   console.log('a user connected');
 
   io.sockets.emit('users', users);
 
-  users[userId].push(socket.id);
-
-  socket.on('login', function(data){
-    friends = db2.prepare('SELECT friend from friends where name = ?').all(data)
-    freinds2=db2.prepare('SELECT name from friends where friend = ?').all(data)
+  socket.on('login', function (data) {
+    friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
+    freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
     if (friends.length > 0) {
-      friends.forEach(function(friend) {
-        io.sockets[friend].emit('online', data);
+      friends.forEach(function (friend) {
+        friendsocket = socketsforuser[friend];
+        io.sockets[friendsocket].emit('online', data.userId);
       });
     }
     if (freinds2.length > 0) {
-      freinds2.forEach(function(friend) {
-        io.sockets[friend].emit('online', data);
+      freinds2.forEach(function (friend) {
+        friendsocket = socketsforuser[friend];
+        io.sockets[friendsocket].emit('online', data.userId);
       });
     }
     console.log('a user ' + data.userId + ' connected');
 
     // saving userId to object with socket ID
-    users[socket.id] = data;
+    users[socket.id] = data.userId;
+    // saving socket to object with user Id
+
+    if (socketsforuser[data.userId] != socketsforuser[data.userId]) {
+      socketsforuser[data.userId].push(socket.id);
+    }
+    else {
+      socketsforuser[data.userId] = [socket.id];
+    }
+
+  });
+  socket.on('logout', function (data) {
+  
+   
+
+    friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
+    freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
+    if (friends.length > 0) {
+      friends.forEach(function (friend) {
+        friendsocket = socketsforuser[friend];
+        io.sockets[friendsocket].emit('offline', data.userId);
+
+      });
+    }
+    if (freinds2.length > 0) {
+      freinds2.forEach(function (friend) {
+        friendsocket = socketsforuser[friend];
+        io.sockets[friendsocket].emit('offline', data.userId);
+      });
+    }
+    // ISER IS OFFLINE BROAD CAST TO ALL CONNECTED USERS
+    io.sockets.emit("offline", data.userId);
+    // remove saved socket from users object
+    delete users[socket.id];
+    _.remove(users[socket.id], (u) => u === socket.id);
+    console.log('user logged out');
   });
 
-  socket.on('disconnect', function(data){
+  socket.on('disconnect', function (data){
+    io.sockets.emit('offline', users[socket.id]);
     _.remove(users[socket.id], (u) => u === socket.id);
-    if (users[userId].length === 0) {
-      // ISER IS OFFLINE BROAD CAST TO ALL CONNECTED USERS
-      io.sockets.emit("offline", data);
+
+    friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
+    freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
+    if (friends.length > 0) {
+      friends.forEach(function (friend) {
+        friendsocket = socketsforuser[friend];
+        io.sockets[friendsocket].emit('offline', data.userId);
+      });
+    }
+    if (freinds2.length > 0) {
+      freinds2.forEach(function (friend) {
+        friendsocket = socketsforuser[friend];
+        io.sockets[friendsocket].emit('offline', data.userId);
+      });
+    }
+    // ISER IS OFFLINE BROAD CAST TO ALL CONNECTED USERS
+    io.sockets.emit("offline", data.userId);
     // remove saved socket from users object
     delete users[socket.id];
     console.log('user disconnected');
     socket.disconnect();
-    }
+  });
 });
-});
+
 /**
  * Listen on provided port, on all network interfaces.
  */
@@ -129,10 +179,10 @@ var ftpcli = require('ftp-client');
 const { finished } = require('stream');
 
 ftpcli = new ftpcli({
-    host: '20.115.84.85',
-    port: 21,
-    user: 'threeam',
-    password: '3amDockerImage'
+  host: '20.115.84.85',
+  port: 21,
+  user: 'threeam',
+  password: '3amDockerImage'
 });
 /*
 ftpcli.connect(function() {

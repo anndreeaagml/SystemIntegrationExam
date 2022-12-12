@@ -39,8 +39,8 @@ var app = express();
 
 //app settings
 app.locals.pluralize = require('pluralize');
-app.use(cors(({credentials:true})));
-require("./enable-cors.js")(app)
+app.use(cors({ origin: ['https://sgoatfrontend.azurewebsites.net','130.226.161.125','195.249.187.101','195.249.186.44'], credentials: true}));
+//require("./enable-cors.js")(app)
 app.use(logger('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
