@@ -273,6 +273,14 @@ router.post("/invite", async function (req, res, next) {
 
 router.get("/logo", async function (req, res, next) {
   res.send('<img src="https://sysint.blob.core.windows.net/goat/andreeafdf.jpeg?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-01-31T20:54:39Z&st=2022-12-01T12:54:39Z&sip=0.0.0.0-255.255.255.255&spr=https,http&sig=UUFZl8OMYLIpv75pNpcDFJOvf3%2FFRrnm8VHpVC9Ijyw%3D" alt="logo" />');
+  
 });
 
+
+router.get('/user', function (req, res) {
+  username = req.user.username;
+  console.log(req);
+  row = db2.prepare("SELECT * FROM users WHERE name = ?").get(username);
+  return res.send({ username: username, email: row.email, id: row.user_id, image_url: row.image_url });
+});
 module.exports = router;
