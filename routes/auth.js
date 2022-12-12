@@ -141,6 +141,7 @@ router.get('/login', function (req, res) {
  */
 
 router.post('/login/password', function (req, res, next) {
+  
   if (!req.body.username || !req.body.password) {
     return res.status(400).send({ message: 'Please fill out all fields' });
   }
@@ -152,11 +153,14 @@ router.post('/login/password', function (req, res, next) {
     if (!user) {
       return res.send(401, { success: false, message: 'authentication failed' });
     }
+    
     req.login(user, function (err) {
       if (err) {
         return next(err);
       }
-      return res.send({ success: true, message: 'authentication succeeded' });
+      
+      return res.cookie('connect.sid', 's:' + signature.sign(req.sessionID, 'keyboard cat'), { httpOnly: true }).status(200).send(JSON.stringify({ message: 'Logged in successfully' }));
+
     });
   })(req, res, next);
 });
