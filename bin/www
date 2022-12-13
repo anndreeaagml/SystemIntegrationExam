@@ -42,8 +42,14 @@ io.on('connection', function (socket) {
     users[socket.id] = data.userId;
     socketsforuser[data.userId] = [socket.id];
     var email = db2.prepare("SELECT email FROM users WHERE name = ?").get(data.userId);
-    notconected = db2.prepare('SELECT invited_email from invites where invitee_email = ?').all(email.email)
-    friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
+    if (email != null) {
+      notconected = db2.prepare('SELECT invited_email from invites where invitee_email = ?').all(email.email)
+      if (notconected.length > 0) {
+        notconected.forEach(function (friend) {
+          io.to(socket.id).emit('invitation-pending', friend.invited_email);
+        });
+      }
+      friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
     freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
     if (friends.length > 0) {
       friends.forEach(function (friend) {
@@ -63,12 +69,14 @@ io.on('connection', function (socket) {
         }
       });
     }
-    if (notconected.length > 0) {
-      notconected.forEach(function (friend) {
-        io.to(socket.id).emit('invitation-pending', friend.invited_email);
-      });
-    }
+    
     console.log('a user ' + data.userId + ' connected');
+    }
+    else {
+      console.log("user not found", "user is not registered");
+      console.log(socket.id);
+      io.to(socket.id).emit('user-not-found', "user is not registered");
+    }
 
 
   });
