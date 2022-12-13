@@ -25,93 +25,103 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, {
+  cors: { origin: "*" },
+  pingInterval: 1000 * 60 * 5,
+  pingTimeout: 1000 * 60 * 3
+});
 let users = {};
 let socketsforuser = {};
 io.on('connection', function (socket) {
   console.log('a user connected');
 
-  io.sockets.emit('users', users);
-
   socket.on('login', function (data) {
+    if (data.userId == null) {
+      return;
+    }
+    users[socket.id] = data.userId;
+    socketsforuser[data.userId] = [socket.id];
+    var email = db2.prepare("SELECT email FROM users WHERE name = ?").get(data.userId);
+    notconected = db2.prepare('SELECT invited_email from invites where invitee_email = ?').all(email.email)
     friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
     freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
     if (friends.length > 0) {
       friends.forEach(function (friend) {
-        friendsocket = socketsforuser[friend];
-        io.sockets[friendsocket].emit('online', data.userId);
+        if (socketsforuser[friend.friend] != null) {
+          friendsocket = socketsforuser[friend.friend][0];
+          io.to(friendsocket).emit('online', data.userId);
+          io.to(socket.id).emit('online', friend.friend);
+        }
       });
     }
     if (freinds2.length > 0) {
       freinds2.forEach(function (friend) {
-        friendsocket = socketsforuser[friend];
-        io.sockets[friendsocket].emit('online', data.userId);
+        if (socketsforuser[friend.name] != null) {
+          friendsocket = socketsforuser[friend.name][0];
+          io.to(friendsocket).emit('online', data.userId);
+          io.to(socket.id).emit('online', friend.name);
+        }
+      });
+    }
+    if (notconected.length > 0) {
+      notconected.forEach(function (friend) {
+        io.to(socket.id).emit('invitation-pending', friend.invited_email);
       });
     }
     console.log('a user ' + data.userId + ' connected');
 
-    // saving userId to object with socket ID
-    users[socket.id] = data.userId;
-    // saving socket to object with user Id
-
-    if (socketsforuser[data.userId] != socketsforuser[data.userId]) {
-      socketsforuser[data.userId].push(socket.id);
-    }
-    else {
-      socketsforuser[data.userId] = [socket.id];
-    }
 
   });
   socket.on('logout', function (data) {
-  
-   
 
     friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
     freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
     if (friends.length > 0) {
       friends.forEach(function (friend) {
-        friendsocket = socketsforuser[friend];
-        io.sockets[friendsocket].emit('offline', data.userId);
-
+        if (socketsforuser[friend.friend] != null) {
+          friendsocket = socketsforuser[friend.friend][0];
+          io.to(friendsocket).emit('offline', data.userId);
+        }
       });
     }
     if (freinds2.length > 0) {
       freinds2.forEach(function (friend) {
-        friendsocket = socketsforuser[friend];
-        io.sockets[friendsocket].emit('offline', data.userId);
+        if (socketsforuser[friend.name] != null) {
+          friendsocket = socketsforuser[friend.name][0];
+          io.to(friendsocket).emit('offline', data.userId);
+        }
       });
     }
-    // ISER IS OFFLINE BROAD CAST TO ALL CONNECTED USERS
-    io.sockets.emit("offline", data.userId);
     // remove saved socket from users object
     delete users[socket.id];
     _.remove(users[socket.id], (u) => u === socket.id);
     console.log('user logged out');
   });
 
-  socket.on('disconnect', function (data){
-    io.sockets.emit('offline', users[socket.id]);
-    _.remove(users[socket.id], (u) => u === socket.id);
-
-    friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
-    freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
+  socket.on('disconnect', function () {
+    user = users[socket.id];
+    friends = db2.prepare('SELECT friend from friends where name = ?').all(user)
+    freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(user)
     if (friends.length > 0) {
       friends.forEach(function (friend) {
-        friendsocket = socketsforuser[friend];
-        io.sockets[friendsocket].emit('offline', data.userId);
+        if (socketsforuser[friend.friend] != null) {
+          friendsocket = socketsforuser[friend.friend][0];
+          io.to(friendsocket).emit('offline', user);
+        }
       });
     }
     if (freinds2.length > 0) {
       freinds2.forEach(function (friend) {
-        friendsocket = socketsforuser[friend];
-        io.sockets[friendsocket].emit('offline', data.userId);
+        if (socketsforuser[friend.name] != null) {
+          friendsocket = socketsforuser[friend.name][0];
+          io.to(friendsocket).emit('offline', user);
+        }
       });
     }
-    // ISER IS OFFLINE BROAD CAST TO ALL CONNECTED USERS
-    io.sockets.emit("offline", data.userId);
     // remove saved socket from users object
     delete users[socket.id];
-    console.log('user disconnected');
+    _.remove(users[socket.id], (u) => u === socket.id);
+    console.log('user disconected out');
     socket.disconnect();
   });
 });
