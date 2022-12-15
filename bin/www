@@ -25,12 +25,7 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" },
-  pingInterval: 1000 * 60 * 5,
-  pingTimeout: 1000 * 60 * 3,
-  transports:['websocket']
-});
+const io = new Server(server, { });
 let users = {};
 let socketsforuser = {};
 io.on('connection', function (socket) {
