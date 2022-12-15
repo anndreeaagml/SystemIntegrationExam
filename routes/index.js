@@ -102,15 +102,15 @@ var transporter = nodemailer.createTransport({
 
 router.post("/sendinvite", async function (req, res, next) {
   if (!req.user) {
-    res.send(400,{ message: "You must be logged in to send invites." });
+    res.send(400, { message: "You must be logged in to send invites." });
     return;
   }
   if (!req.body.toemail) {
-    res.send(401,{ message: "You must provide an email address to send an invite to." });
+    res.send(401, { message: "You must provide an email address to send an invite to." });
     return;
   }
   if (!req.body.url) {
-    res.send(402,{ message: "Oh..you forgot to put the url to the site" });
+    res.send(402, { message: "Oh..you forgot to put the url to the site" });
     return;
   }
   var user = req.user.username;
@@ -119,9 +119,9 @@ router.post("/sendinvite", async function (req, res, next) {
   var url = req.body.url;
   var subject = "Invitation to join my app";
   var token = uuidv4();
-  var text = "You have been invited by " + email.email + " to join my app. Please click on the link below to join: "+url+token;
-  if(req.body.manual_input){
-    text = "You have been invited by " + email.email + " to join my app. Please enter the token: "+token+" in the following link: "+url;
+  var text = "You have been invited by " + email.email + " to join my app. Please click on the link below to join: " + url + token;
+  if (req.body.manual_input) {
+    text = "You have been invited by " + email.email + " to join my app. Please enter the token: " + token + " in the following link: " + url;
   }
   var mailOptions = {
     from: email.email,
@@ -129,7 +129,7 @@ router.post("/sendinvite", async function (req, res, next) {
     subject: subject,
     text: text,
   };
-
+  try {
   db2.prepare("INSERT INTO invites (token, invitee_email, invited_email) VALUES (?, ? ,?)").run(token, email.email, toemail);
   transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
@@ -139,6 +139,15 @@ router.post("/sendinvite", async function (req, res, next) {
     }
   });
   res.send({ message: "Invitation sent" });
+  } catch (err) {
+    console.log(err);
+    if (err.code == "SQLITE_CONSTRAINT_UNIQUE") {
+      res.send({ message: "You have already sent an invite to this email address." });
+      return;
+    }
+    res.send({ message: "Error sending invitation" });
+    return;
+  }
 
 });
 
@@ -244,6 +253,7 @@ router.put("/updateuser", upload.single('image'), async function (req, res, next
 router.post("/invite", async function (req, res, next) {
   var token = req.query.token;
   var salt = crypto.randomBytes(16);
+  try{
   db2.prepare("INSERT INTO users (name, password,email, salt) VALUES (?, ?, ?, ?)")
     .run(
       req.body.username,
@@ -253,6 +263,10 @@ router.post("/invite", async function (req, res, next) {
       req.body.email,
       salt.toString("hex")
     );
+  } catch (err) {
+    res.send({ message: "Username or email already exists" });
+    return;
+  }
   var friend = await db2.prepare("SELECT invited_email FROM invites WHERE token = ?").get(token);
   db2.prepare("DELETE FROM invites WHERE token = ?").run(token);
   db2.prepare("INSERT INTO friends (name, friend) VALUES (?, ?)").run(req.body.username, friend.invited_email);
@@ -273,9 +287,41 @@ router.post("/invite", async function (req, res, next) {
 
 router.get("/logo", async function (req, res, next) {
   res.send('<img src="https://sysint.blob.core.windows.net/goat/andreeafdf.jpeg?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-01-31T20:54:39Z&st=2022-12-01T12:54:39Z&sip=0.0.0.0-255.255.255.255&spr=https,http&sig=UUFZl8OMYLIpv75pNpcDFJOvf3%2FFRrnm8VHpVC9Ijyw%3D" alt="logo" />');
-  
+
 });
 
+/**
+ * @swagger
+ * /user:
+ *   get:
+ *     summary: Get the user's information
+ *     tags: [API]
+ *     responses:
+ *       200:
+ *        description: Get the user's information
+ *        content:
+ *         application/json:
+ *             schema:
+ *              type: object
+ *              properties:
+ *                username:
+ *                  type: string
+ *                  description: The username of the user
+ *                  example: JohnnyBoy
+ *                email:
+ *                  type: string
+ *                  description: The email of the user
+ *                  example: example@example.com
+ *                id:
+ *                  type: integer
+ *                  description: The id of the user
+ *                  example: 1
+ *                image_url:
+ *                  type: string
+ *                  description: The image url of the user
+ *                  example: https://sysint.blob.core.windows.net/goat/andreeafdf.jpeg?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-01-31T20:54:39Z&st=2022-12-01T12:54:39Z&sip=
+ * 
+ */
 
 router.get('/user', function (req, res) {
   username = req.user.username;
