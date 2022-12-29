@@ -15,25 +15,6 @@ var crypto = require("crypto");
 
 var router = express.Router();
 
-const feed = new Feed({
-  title: "Feed Goat",
-  description: "This is the feed for the Goat Gift Shop",
-  id: "http://example.com/",
-  link: "http://example.com/",
-  language: "en", // optional, used only in RSS 2.0, possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
-  image: "http://example.com/image.png",
-  favicon: "http://example.com/favicon.ico",
-  copyright: "All rights reserved 2013, John Doe",
-  feedLinks: {
-    json: "https://example.com/json",
-    atom: "https://example.com/atom"
-  },
-  author: {
-    name: "John Doe",
-    email: "johndoe@example.com",
-    link: "https://example.com/johndoe"
-  }
-});
 
 
 /**
@@ -71,11 +52,11 @@ const feed = new Feed({
 
 router.post("/wishes", async function (req, res, next) {
   if (!req.user) {
-    res.send(401,{ message: "You must be logged in to add wishes." });
+    res.send(401, { message: "You must be logged in to add wishes." });
     return;
   }
   if (!req.body.product_id) {
-    res.send(400,{ message: "You must specify a product_id to add" });
+    res.send(400, { message: "You must specify a product_id to add" });
     return;
   }
   var user = req.user.username;
@@ -88,23 +69,6 @@ router.post("/wishes", async function (req, res, next) {
 
 
   db2.prepare("INSERT INTO wishes (user_id, product_id, date_added) VALUES (?, ?, ?)").run(user_id.user_id, prod_id, date);
-  feed.addItem({
-    title: "New Wish",
-    description: user + "added a new item to their wishlist",
-    content: user + "added item no." + prod_id + " to their wishlist",
-    author: [
-      {
-        name: user
-      }
-    ],
-    date: new Date()
-  });
-  var x = feed.atom1();
-
-  fs.writeFile('feed.xml', x, function (err) {
-    if (err) throw err;
-    console.log('Saved!');
-  });
   res.send({ message: "Wish added" });
 });
 
@@ -136,11 +100,11 @@ router.post("/wishes", async function (req, res, next) {
 
 router.delete("/wishes", async function (req, res, next) {
   if (!req.user) {
-    res.send(401,{ message: "You must be logged in to remove wishes." });
+    res.send(401, { message: "You must be logged in to remove wishes." });
     return;
   }
   if (!req.body.product_id) {
-    res.send(400,{ message: "You must specify a product_id to remove" });
+    res.send(400, { message: "You must specify a product_id to remove" });
     return;
   }
   var user = req.user.username;
@@ -201,6 +165,60 @@ router.get("/wishes", async function (req, res, next) {
 
   var wishes = await db2.prepare("SELECT * from wishes where user_id = ?").all(user_id.user_id);
   res.send({ wishes });
+});
+
+/**
+ * @swagger
+ * /feed:
+ *   get:
+ *     summary: Get a user's wishlist
+ *     tags: [Wishlist]
+ *     responses:
+ *       200:
+ *         description: Get the wishlist feed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: string
+ */
+router.get("/feed", async function (req, res, next) {
+  var feed = new Feed({
+    title: "Feed Goat",
+    description: "This is the feed for the Goat Gift Shop",
+    id: "http://example.com/",
+    link: "http://example.com/",
+    language: "en", // optional, used only in RSS 2.0, possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
+    image: "http://example.com/image.png",
+    favicon: "http://example.com/favicon.ico",
+    copyright: "All rights reserved 2013, John Doe",
+    feedLinks: {
+      json: "https://example.com/json",
+      atom: "https://example.com/atom"
+    },
+    author: {
+      name: "John Doe",
+      email: "johndoe@example.com",
+      link: "https://example.com/johndoe"
+    }
+  });
+
+  var wishes = await db2.prepare("SELECT * from wishes ORDER BY date_added DESC LIMIT 10").all();
+  wishes.forEach(wish => {
+    console.log(wish);
+    feed.addItem({
+      title: "New Wish",
+      description: wish.user_id + " added a new item to their wishlist",
+      content: wish.user_id + " added item no." + wish.product_id + " to their wishlist",
+      author: [
+        {
+          name: wish.user_id
+        }
+      ],
+      date: new Date(wish.date_added)
+    });
+  });
+
+  res.send(200, feed.atom1());
 });
 
 module.exports = router;
