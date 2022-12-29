@@ -42,6 +42,7 @@ app.locals.pluralize = require('pluralize');
 app.use(cors({ origin: ['https://sgoatfrontend.azurewebsites.net','130.226.161.125','195.249.187.101','195.249.186.44','https://localhost:3000', 'http://localhost:3000', 'http://localhost:5501', 'http://127.0.0.1:5501'], credentials: true}));
 //require("./enable-cors.js")(app)
 app.use(logger('dev'));
+app.enable('trust proxy')
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: false }));
@@ -51,7 +52,13 @@ app.use(session({
   secret: 'keyboard cat',
   resave: false, // don't save session if unmodified
   saveUninitialized: false, // don't create session until something stored
-  store: new SQLiteStore({ db: 'sessions.db', dir: './var/db' })
+  store: new SQLiteStore({ db: 'sessions.db', dir: './var/db' }),
+  cookie:
+  {
+    sameSite: 'none',
+    secure: true,
+    maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+  }
 }));
 //app.use(csrf());
 app.use(passport.authenticate('session'));
