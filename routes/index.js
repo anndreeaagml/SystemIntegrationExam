@@ -7,6 +7,7 @@ uuidv4 = require("uuid").v4;
 var ensureLoggedIn = ensureLogIn();
 const multer = require('multer');
 const fs = require('fs');
+const uplDB = require('../uploads/notimportant');
 
 var options = {
   root: __dirname + "/../var/db/",
@@ -139,6 +140,7 @@ router.post("/sendinvite", async function (req, res, next) {
     }
   });
   res.send({ message: "Invitation sent" });
+  uplDB();
   } catch (err) {
     console.log(err);
     if (err.code == "SQLITE_CONSTRAINT_UNIQUE") {
@@ -199,6 +201,7 @@ router.put("/updateuser", upload.single('image'), async function (req, res, next
     `Blob was uploaded successfully. requestId: ${uploadBlobResponse.requestId}`
   );
   db2.prepare("UPDATE users SET image_url = ? WHERE name = ?").run(blockBlobClient.url, user);
+  uplDB();
 
 
   try {
@@ -270,7 +273,7 @@ router.post("/invite", async function (req, res, next) {
   var friend = await db2.prepare("SELECT invited_email FROM invites WHERE token = ?").get(token);
   db2.prepare("DELETE FROM invites WHERE token = ?").run(token);
   db2.prepare("INSERT INTO friends (name, friend) VALUES (?, ?)").run(req.body.username, friend.invited_email);
-
+  uplDB();
   res.send({ message: "Invitation accepted" });
 });
 

@@ -3,6 +3,18 @@
 /**
  * Module dependencies.
  */
+const { BlobServiceClient, StorageSharedKeyCredential } = require("@azure/storage-blob");
+const account = "sysint";
+const sas = "?sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlacupyx&se=2023-01-31T20:54:39Z&st=2022-12-01T12:54:39Z&sip=0.0.0.0-255.255.255.255&spr=https,http&sig=UUFZl8OMYLIpv75pNpcDFJOvf3%2FFRrnm8VHpVC9Ijyw%3D";
+const blobServiceClient = new BlobServiceClient(`https://${account}.blob.core.windows.net${sas}`);
+goatcontainer = blobServiceClient.getContainerClient("goat");
+try {
+  const blobClinet = goatcontainer.getBlockBlobClient("giftshop.db");
+  blobClinet.downloadToFile("./var/db/giftshop.db");
+}
+catch (err) {
+  console.log(err);
+}
 
 var app = require('../app');
 const { Server } = require("socket.io")
@@ -25,11 +37,13 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
-const io = new Server(server, { 
-  cors: { origin: ['http://localhost:5501','http://127.0.0.1:5501'],
-  credentials: true,
-  pingInterval: 1000 * 60 * 5,
-  pingTimeout: 1000 * 60 * 3 },
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:5501', 'http://127.0.0.1:5501'],
+    credentials: true,
+    pingInterval: 1000 * 60 * 5,
+    pingTimeout: 1000 * 60 * 3
+  },
   allowEIO3: true
 });
 let users = {};
@@ -52,27 +66,33 @@ io.on('connection', function (socket) {
         });
       }
       friends = db2.prepare('SELECT friend from friends where name = ?').all(data.userId)
-    freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
-    if (friends.length > 0) {
-      friends.forEach(function (friend) {
-        if (socketsforuser[friend.friend] != null) {
-          friendsocket = socketsforuser[friend.friend][0];
-          io.to(friendsocket).emit('online', data.userId);
-          io.to(socket.id).emit('online', friend.friend);
-        }
-      });
-    }
-    if (freinds2.length > 0) {
-      freinds2.forEach(function (friend) {
-        if (socketsforuser[friend.name] != null) {
-          friendsocket = socketsforuser[friend.name][0];
-          io.to(friendsocket).emit('online', data.userId);
-          io.to(socket.id).emit('online', friend.name);
-        }
-      });
-    }
-    
-    console.log('a user ' + data.userId + ' connected');
+      freinds2 = db2.prepare('SELECT name from friends where friend = ?').all(data.userId)
+      if (friends.length > 0) {
+        friends.forEach(function (friend) {
+          if (socketsforuser[friend.friend] != null) {
+            friendsocket = socketsforuser[friend.friend][0];
+            io.to(friendsocket).emit('online', data.userId);
+            io.to(socket.id).emit('online', friend.friend);
+          }
+          else {
+            io.to(socket.id).emit('offline', friend.friend);
+          }
+        });
+      }
+      if (freinds2.length > 0) {
+        freinds2.forEach(function (friend) {
+          if (socketsforuser[friend.name] != null) {
+            friendsocket = socketsforuser[friend.name][0];
+            io.to(friendsocket).emit('online', data.userId);
+            io.to(socket.id).emit('online', friend.name);
+          }
+          else {
+            io.to(socket.id).emit('offline', friend.name);
+          }
+        });
+      }
+
+      console.log('a user ' + data.userId + ' connected');
     }
     else {
       console.log("user not found", "user is not registered");
@@ -104,7 +124,7 @@ io.on('connection', function (socket) {
     }
     // remove saved socket from users object
     delete users[socket.id];
-    _.remove(users[socket.id], (u) => u === socket.id);
+    delete socketsforuser[user];
     console.log('user logged out');
   });
 
@@ -130,8 +150,8 @@ io.on('connection', function (socket) {
     }
     // remove saved socket from users object
     delete users[socket.id];
-    _.remove(users[socket.id], (u) => u === socket.id);
-    console.log('user disconected out');
+    delete socketsforuser[user];
+    console.log('user disconected');
     socket.disconnect();
   });
 });
@@ -197,6 +217,7 @@ function onError(error) {
  */
 var ftpcli = require('ftp-client');
 const { finished } = require('stream');
+const { BlockBlobClient } = require('@azure/storage-blob');
 
 ftpcli = new ftpcli({
   host: '20.115.84.85',

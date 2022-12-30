@@ -64,11 +64,8 @@ router.post("/wishes", async function (req, res, next) {
   var user_id = await db2.prepare("SELECT user_id FROM users WHERE name = ?").get(user);
   var prod_id = req.body.product_id;
 
-
-
-
-
   db2.prepare("INSERT INTO wishes (user_id, product_id, date_added) VALUES (?, ?, ?)").run(user_id.user_id, prod_id, date);
+  uplDB();
   res.send({ message: "Wish added" });
 });
 
@@ -113,6 +110,7 @@ router.delete("/wishes", async function (req, res, next) {
 
 
   db2.prepare("DELETE FROM wishes WHERE user_id = ? AND product_id = ?").run(user_id.user_id, prod_id);
+  uplDB();
   res.send({ message: "Wish removed" });
 });
 

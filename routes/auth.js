@@ -5,6 +5,7 @@ var crypto = require('crypto');
 var db = require('../db');
 const app = require('../app');
 const signature = require('cookie-signature');
+const uplDB= require('../uploads/notimportant');
 
 
 /* Configure password authentication strategy.
@@ -304,6 +305,7 @@ router.post('/signup', function (req, res, next) {
       req.login({ id: this.lastID, username: req.body.username }, function (err) {
         if (err) { return next(err); }
         res.send({ message: 'username: ' + req.body.username + ' email: ' + req.body.email });
+        uplDB();
       });
     }
   );
