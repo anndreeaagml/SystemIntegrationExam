@@ -328,7 +328,6 @@ router.get("/logo", async function (req, res, next) {
 
 router.get('/user', function (req, res) {
   username = req.user.username;
-  console.log(req);
   row = db2.prepare("SELECT * FROM users WHERE name = ?").get(username);
   return res.send({ username: username, email: row.email, id: row.user_id, image_url: row.image_url });
 });
