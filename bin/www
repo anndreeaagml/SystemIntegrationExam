@@ -39,7 +39,7 @@ app.set('port', port);
 var server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5501', 'http://127.0.0.1:5501', 'https://sgoatfrontend.azurewebsites.net/'],
+    origin: ['http://localhost:5501', 'http://127.0.0.1:5501', 'https://sgoatfrontend.azurewebsites.net'],
     credentials: true,
     pingInterval: 1000 * 60 * 5,
     pingTimeout: 1000 * 60 * 3
