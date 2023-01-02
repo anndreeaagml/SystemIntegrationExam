@@ -269,9 +269,12 @@ router.post("/invite", async function (req, res, next) {
     res.send({ message: "Username or email already exists" });
     return;
   }
-  var friend = await db2.prepare("SELECT invited_email FROM invites WHERE token = ?").get(token);
+  var friend = await db2.prepare("SELECT invitee_email FROM invites WHERE token = ?").get(token);
+  console.log(friend);
+  var user = await db2.prepare("SELECT name FROM users WHERE email = ?").get(friend.invitee_email);
+  console.log(user);
+  db2.prepare("INSERT INTO friends (name, friend) VALUES (?, ?)").run(req.body.username, user.name);
   db2.prepare("DELETE FROM invites WHERE token = ?").run(token);
-  db2.prepare("INSERT INTO friends (name, friend) VALUES (?, ?)").run(req.body.username, friend.invited_email);
   uplDB();
   res.send({ message: "Invitation accepted" });
 });
