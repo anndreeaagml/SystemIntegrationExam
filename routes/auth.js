@@ -280,10 +280,6 @@ router.post('/signup', function (req, res, next) {
   if (req.body.username.match(/^[a-zA-Z0-9]+$/) == null) {
     return res.status(400).send({ message: 'Username can only contain letters and numbers' });
   }
-
-  if (req.body.email.match(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[a-zA-Z0-9]+$/) == null) {
-    return res.status(400).send({ message: 'Email must be in the format of example@example.example' });
-  }
   if (req.body.email.length > 50) {
     return res.status(400).send({ message: 'Email must be less than 50 characters long' });
   }
