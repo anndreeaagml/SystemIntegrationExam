@@ -260,13 +260,12 @@ router.post("/invite", async function (req, res, next) {
   db2.prepare("INSERT INTO users (name, password,email, salt) VALUES (?, ?, ?, ?)")
     .run(
       req.body.username,
-      crypto
-        .pbkdf2Sync(req.body.password, salt, 1000, 64, "sha512")
-        .toString("hex"),
+      crypto.pbkdf2Sync(req.body.password, salt, 310000, 32, "sha256"),
       req.body.email,
-      salt.toString("hex")
+      salt
     );
   } catch (err) {
+    console.log(err);
     res.send({ message: "Username or email already exists" });
     return;
   }
